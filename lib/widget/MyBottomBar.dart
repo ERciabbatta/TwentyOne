@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/Home.dart';
 import 'package:untitled/note.dart';
-import 'package:untitled/pro.dart';
+import 'package:untitled/inspo.dart';
 import 'package:untitled/widget_tree.dart';
 
 class MyBottomBar extends StatefulWidget {
@@ -17,7 +17,7 @@ class _MyBottomBarState extends State<MyBottomBar> {
     Home(),
     const Note(),
     WidgetTree(),
-    const Pro(),
+    const Inspo(),
   ];
 
   int currentPage = 0;
@@ -63,7 +63,7 @@ class _MyBottomBarState extends State<MyBottomBar> {
                 ),
                 _NavItem(
                   icon: Icons.rocket_launch_outlined,
-                  label: 'Pro',
+                  label: 'Ispirati',
                   selected: currentPage == 3,
                   onTap: () => setState(() => currentPage = 3),
                 ),

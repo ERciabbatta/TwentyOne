@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:untitled/widget/quotes_data.dart';
 
 class Home extends StatefulWidget {
   Home({super.key});
@@ -74,44 +75,6 @@ class _HomeState extends State<Home> {
     final da = DateTime(a.year, a.month, a.day);
     final db = DateTime(b.year, b.month, b.day);
     return db.difference(da).inDays;
-  }
-
-  final List<String> _frasi = [
-    "Ogni giorno è una nuova opportunità per migliorare.",
-    "Il successo è la somma di piccoli sforzi ripetuti ogni giorno.",
-    "Non aspettare il momento giusto, crealo tu.",
-    "La disciplina è il ponte tra gli obiettivi e i risultati.",
-    "Credi in te stesso e il mondo crederà in te.",
-    "Il viaggio di mille miglia inizia con un singolo passo.",
-    "Non è mai troppo tardi per diventare ciò che avresti potuto essere.",
-    "La forza non viene dall'abilità fisica, ma dalla volontà indomita.",
-    "Ogni mattina hai due scelte: continuare a dormire o alzarti e inseguire i tuoi sogni.",
-    "Il fallimento è solo l'opportunità di ricominciare in modo più intelligente.",
-    "Non contare i giorni, fai sì che i giorni contino.",
-    "La vita inizia dove finisce la tua zona di comfort.",
-    "Sii il cambiamento che vuoi vedere nel mondo.",
-    "Il coraggio non è l'assenza di paura, ma agire nonostante essa.",
-    "Ogni esperto è stato una volta un principiante.",
-    "Il tuo unico limite sei tu.",
-    "Sogna in grande, lavora sodo, rimani umile.",
-    "Non smettere mai quando sei stanco, smetti quando hai finito.",
-    "Il presente è il momento in cui costruisci il tuo futuro.",
-    "Piccoli passi ogni giorno portano a grandi risultati.",
-    "La motivazione ti fa iniziare, l'abitudine ti fa continuare.",
-    "Sii più forte delle tue scuse.",
-    "Il dolore di oggi è la forza di domani.",
-    "Non confrontarti con gli altri, confrontati con chi eri ieri.",
-    "Le grandi cose non vengono dalla zona di comfort.",
-    "Ogni giorno fai qualcosa che ti avvicini al tuo obiettivo.",
-    "Il successo non è definitivo, il fallimento non è fatale.",
-    "Investi in te stesso, è il miglior investimento che puoi fare.",
-    "La perseveranza è la chiave che apre tutte le porte.",
-    "Oggi è sempre il giorno migliore per iniziare.",
-  ];
-
-  String _getFraseDelGiorno() {
-    final giorno = DateTime.now().difference(DateTime(2024, 1, 1)).inDays;
-    return _frasi[giorno % _frasi.length];
   }
 
   Stream<QuerySnapshot> _noteStream() {
@@ -269,6 +232,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final quoteOfDay = getQuoteOfDay();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -349,7 +314,7 @@ class _HomeState extends State<Home> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _getFraseDelGiorno(),
+                        quoteOfDay.text,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 14,
