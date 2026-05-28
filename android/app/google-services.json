@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "100839405357",
+    "firebase_url": "https://twentyone-b6a4a-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "twentyone-b6a4a",
+    "storage_bucket": "twentyone-b6a4a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:100839405357:android:4c6f8ceb65fbd4643885a4",
+        "android_client_info": {
+          "package_name": "com.twentyone.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdmhg5ombq00APvgkioqoU6ExGG4s8sww"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
