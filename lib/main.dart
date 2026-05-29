@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:untitled/profilo.dart';
 import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
+import 'package:untitled/widget/servizio_notifiche.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp();
+
+  final notifService = NotificationService();
+  await notifService.init();
+  await notifService.scheduleNotificheEventi();
+  await notifService.scheduleMotivazionale();
+
   runApp(const MyApp());
 }
 

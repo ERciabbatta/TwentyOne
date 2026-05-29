@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/auth.dart';
+import 'package:untitled/cambia_password.dart';
+import 'package:untitled/notifiche.dart';
 
 class Profilo extends StatelessWidget {
   Profilo({super.key});
@@ -138,7 +140,10 @@ class Profilo extends StatelessWidget {
               icon: Icons.lock_outline,
               label: 'Cambia password',
               onTap: () {
-                //TODO: naviga alla pagina cambio password
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CambioPassword( )),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -146,7 +151,10 @@ class Profilo extends StatelessWidget {
               icon: Icons.notifications_none_rounded,
               label: 'Notifiche',
               onTap: () {
-                //TODO: naviga alle impostazioni notifiche
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Notifiche()),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -154,7 +162,116 @@ class Profilo extends StatelessWidget {
               icon: Icons.info_outline_rounded,
               label: 'Informazioni sull\'app',
               onTap: () {
-                //TODO: naviga alla pagina info
+                showDialog(
+                  context: context,
+                  builder: (context) => Dialog(
+                    backgroundColor: Colors.transparent,
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+
+                          // Icona app
+                          Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8EEF7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.auto_awesome_rounded,
+                              color: Color(0xFF7A9CC6),
+                              size: 30,
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          Text(
+                            'TwentyOne',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF3A4A5C),
+                            ),
+                          ),
+
+                          const SizedBox(height: 6),
+
+                          const Text(
+                            'Versione 1.0.0',
+                            style: TextStyle(
+                              color: Color(0xFF8A9BB5),
+                              fontSize: 13,
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          const Divider(color: Color(0xFFE8EEF7)),
+
+                          const SizedBox(height: 16),
+
+                          const Text(
+                            'Ogni grande cambiamento inizia con 21 giorni di costanza. Traccia i tuoi progressi e trasforma le tue intenzioni in abitudini reali.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF8A9BB5),
+                              fontSize: 14,
+                              height: 1.6,
+                            ),
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          const Text(
+                            '© 2026 Massimo Minni',
+                            style: TextStyle(
+                              color: Color(0xFFB0BEC5),
+                              fontSize: 12,
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE8EEF7),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Chiudi',
+                                  style: TextStyle(
+                                    color: Color(0xFF3A4A5C),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
 

@@ -1,0 +1,202 @@
+import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:untitled/widget/quotes_data.dart';
+
+class NotificationService {
+  static final NotificationService _instance = NotificationService._internal();
+  factory NotificationService() => _instance;
+  NotificationService._internal();
+
+  final FlutterLocalNotificationsPlugin _plugin =
+  FlutterLocalNotificationsPlugin();
+
+  static const String _keyEventi = 'notifiche_eventi';
+  static const String _keyMotivazionali = 'notifiche_motivazionali';
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+
+  Future<void> init() async {
+    tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Europe/Rome'));
+
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
+    await _plugin.initialize(
+      settings: const InitializationSettings(android: android, iOS: ios),
+    );
+
+    await _plugin
+        .resolvePlatformSpecificImplementation;
+    AndroidFlutterLocalNotificationsPlugin()
+        .requestNotificationsPermission();
+  }
+
+  // ── PREFERENZE ────────────────────────────────────────────────────────────
+
+  Future<bool> getEventiAttivi() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyEventi) ?? true;
+  }
+
+  Future<bool> getMotivazionaliAttive() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyMotivazionali) ?? true;
+  }
+
+  Future<void> setEventiAttivi(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyEventi, value);
+    if (value) {
+      await scheduleNotificheEventi();
+    } else {
+      await cancellaNotificheEventi();
+    }
+  }
+
+  Future<void> setMotivazionaliAttive(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyMotivazionali, value);
+    if (value) {
+      await scheduleMotivazionale();
+    } else {
+      await cancellaMotivazionali();
+    }
+  }
+
+  // ── NOTIFICHE EVENTI ──────────────────────────────────────────────────────
+
+  Future<void> scheduleNotificheEventi() async {
+    final attive = await getEventiAttivi();
+    if (!attive) return;
+
+    await cancellaNotificheEventi();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .collection('note')
+        .get();
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final inizio = data['inizio'] as String?;
+      final testo = data['testo'] as String? ?? 'Hai un evento tra 15 minuti';
+      if (inizio == null) continue;
+
+      final notificaTime = _prossimaTriggerTime(inizio);
+      if (notificaTime == null) continue;
+
+      final id = doc.id.hashCode.abs() % 100000;
+
+      await _plugin.zonedSchedule(
+        id: id,
+        title: '⏰ Tra 15 minuti',
+        body: testo,
+        scheduledDate: notificaTime,
+        notificationDetails: const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'eventi_channel',
+            'Notifiche eventi',
+            channelDescription: 'Promemoria 15 minuti prima degli eventi',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    }
+  }
+
+  Future<void> cancellaNotificheEventi() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .collection('note')
+        .get();
+
+    for (final doc in snapshot.docs) {
+      final id = doc.id.hashCode.abs() % 100000;
+      await _plugin.cancel(id: id);
+    }
+  }
+
+  // ── NOTIFICHE MOTIVAZIONALI ───────────────────────────────────────────────
+
+  Future<void> scheduleMotivazionale() async {
+    final attive = await getMotivazionaliAttive();
+    if (!attive) return;
+
+    await cancellaMotivazionali();
+
+    final random = Random();
+    final oreRandom = 4 + random.nextInt(7);
+    final trigger =
+    tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
+
+    final quote = allQuotes[random.nextInt(allQuotes.length)];
+
+    await _plugin.zonedSchedule(
+      id: 999999,
+      title: '💪 ${quote.author}',
+      body: quote.text,
+      scheduledDate: trigger,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'motivazionali_channel',
+          'Frasi motivazionali',
+          channelDescription: 'Frasi di ispirazione quotidiana',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  Future<void> cancellaMotivazionali() async {
+    await _plugin.cancel(id: 999999);
+  }
+
+  // ── HELPER ────────────────────────────────────────────────────────────────
+
+  tz.TZDateTime? _prossimaTriggerTime(String orario) {
+    final parts = orario.split(':');
+    if (parts.length != 2) return null;
+
+    final ore = int.tryParse(parts[0]);
+    final minuti = int.tryParse(parts[1]);
+    if (ore == null || minuti == null) return null;
+
+    final now = tz.TZDateTime.now(tz.local);
+
+    var eventoOggi =
+    tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti);
+
+    var notificaTime = eventoOggi.subtract(const Duration(minutes: 15));
+
+    if (notificaTime.isBefore(now)) {
+      notificaTime = notificaTime.add(const Duration(days: 1));
+    }
+
+    return notificaTime;
+  }
+}
