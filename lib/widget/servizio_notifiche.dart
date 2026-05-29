@@ -18,8 +18,6 @@ class NotificationService {
   static const String _keyEventi = 'notifiche_eventi';
   static const String _keyMotivazionali = 'notifiche_motivazionali';
 
-  // ── INIT ──────────────────────────────────────────────────────────────────
-
   Future<void> init() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Rome'));
@@ -40,8 +38,6 @@ class NotificationService {
     AndroidFlutterLocalNotificationsPlugin()
         .requestNotificationsPermission();
   }
-
-  // ── PREFERENZE ────────────────────────────────────────────────────────────
 
   Future<bool> getEventiAttivi() async {
     final prefs = await SharedPreferences.getInstance();
@@ -72,8 +68,6 @@ class NotificationService {
       await cancellaMotivazionali();
     }
   }
-
-  // ── NOTIFICHE EVENTI ──────────────────────────────────────────────────────
 
   Future<void> scheduleNotificheEventi() async {
     final attive = await getEventiAttivi();
@@ -138,8 +132,6 @@ class NotificationService {
     }
   }
 
-  // ── NOTIFICHE MOTIVAZIONALI ───────────────────────────────────────────────
-
   Future<void> scheduleMotivazionale() async {
     final attive = await getMotivazionaliAttive();
     if (!attive) return;
@@ -175,8 +167,6 @@ class NotificationService {
   Future<void> cancellaMotivazionali() async {
     await _plugin.cancel(id: 999999);
   }
-
-  // ── HELPER ────────────────────────────────────────────────────────────────
 
   tz.TZDateTime? _prossimaTriggerTime(String orario) {
     final parts = orario.split(':');
