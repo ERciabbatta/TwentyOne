@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:untitled/profilo.dart';
 import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  final notifService = NotificationService();
-  await notifService.init();
-  await notifService.scheduleNotificheEventi();
-  await notifService.scheduleMotivazionale();
+  // Solo init, senza chiamate a Firestore
+  await NotificationService().init();
 
   runApp(const MyApp());
 }
@@ -24,32 +23,44 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: MyBottomBar(),
-
+      home: const _AuthGate(),
       routes: {
         '/profilo': (context) => Profilo(),
       },
-
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+// Widget che aspetta l'auth e poi schedula le notifiche
+class _AuthGate extends StatefulWidget {
+  const _AuthGate();
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<_AuthGate> createState() => _AuthGateState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _AuthGateState extends State<_AuthGate> {
+  @override
+  void initState() {
+    super.initState();
+    _aspettaUtenteESchedula();
+  }
+
+  Future<void> _aspettaUtenteESchedula() async {
+    // Aspetta che Auth sia pronto
+    await FirebaseAuth.instance.authStateChanges().first;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await NotificationService().scheduleNotificheEventi();
+      await NotificationService().scheduleMotivazionale();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-    );
+    return MyBottomBar();
   }
 }
