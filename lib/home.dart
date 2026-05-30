@@ -80,7 +80,7 @@ class _HomeState extends State<Home> {
   Stream<QuerySnapshot> _noteStream() {
     final user = FirebaseAuth.instance.currentUser;
     return FirebaseFirestore.instance
-        .collection('ffffutenti')
+        .collection('utenti')
         .doc(user!.uid)
         .collection('note')
         .snapshots();
