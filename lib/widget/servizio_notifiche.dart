@@ -21,22 +21,24 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Rome'));
-
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-
     await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
     );
+  }
 
-    _plugin
-        .resolvePlatformSpecificImplementation;
-    AndroidFlutterLocalNotificationsPlugin()
-        .requestNotificationsPermission();
+  Future<void> richiediPermessi() async {
+    await _plugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   }
 
   Future<bool> getEventiAttivi() async {
@@ -72,29 +74,22 @@ class NotificationService {
   Future<void> scheduleNotificheEventi() async {
     final attive = await getEventiAttivi();
     if (!attive) return;
-
     await cancellaNotificheEventi();
-
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
     final snapshot = await FirebaseFirestore.instance
         .collection('utenti')
         .doc(user.uid)
         .collection('note')
         .get();
-
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final inizio = data['inizio'] as String?;
       final testo = data['testo'] as String? ?? 'Hai un evento tra 15 minuti';
       if (inizio == null) continue;
-
       final notificaTime = _prossimaTriggerTime(inizio);
       if (notificaTime == null) continue;
-
       final id = doc.id.hashCode.abs() % 100000;
-
       await _plugin.zonedSchedule(
         id: id,
         title: '⏰ Tra 15 minuti',
@@ -119,13 +114,11 @@ class NotificationService {
   Future<void> cancellaNotificheEventi() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-
     final snapshot = await FirebaseFirestore.instance
         .collection('utenti')
         .doc(user.uid)
         .collection('note')
         .get();
-
     for (final doc in snapshot.docs) {
       final id = doc.id.hashCode.abs() % 100000;
       await _plugin.cancel(id: id);
@@ -135,16 +128,11 @@ class NotificationService {
   Future<void> scheduleMotivazionale() async {
     final attive = await getMotivazionaliAttive();
     if (!attive) return;
-
     await cancellaMotivazionali();
-
     final random = Random();
     final oreRandom = 4 + random.nextInt(7);
-    final trigger =
-    tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
-
+    final trigger = tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
     final quote = allQuotes[random.nextInt(allQuotes.length)];
-
     await _plugin.zonedSchedule(
       id: 999999,
       title: '💪 ${quote.author}',
@@ -171,22 +159,15 @@ class NotificationService {
   tz.TZDateTime? _prossimaTriggerTime(String orario) {
     final parts = orario.split(':');
     if (parts.length != 2) return null;
-
     final ore = int.tryParse(parts[0]);
     final minuti = int.tryParse(parts[1]);
     if (ore == null || minuti == null) return null;
-
     final now = tz.TZDateTime.now(tz.local);
-
-    var eventoOggi =
-    tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti);
-
+    var eventoOggi = tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti);
     var notificaTime = eventoOggi.subtract(const Duration(minutes: 15));
-
     if (notificaTime.isBefore(now)) {
       notificaTime = notificaTime.add(const Duration(days: 1));
     }
-
     return notificaTime;
   }
 }

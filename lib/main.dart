@@ -9,8 +9,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Solo init, senza chiamate a Firestore
   await NotificationService().init();
+  await NotificationService().richiediPermessi();
 
   runApp(const MyApp());
 }
@@ -33,7 +33,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Widget che aspetta l'auth e poi schedula le notifiche
 class _AuthGate extends StatefulWidget {
   const _AuthGate();
 
@@ -49,7 +48,6 @@ class _AuthGateState extends State<_AuthGate> {
   }
 
   Future<void> _aspettaUtenteESchedula() async {
-    // Aspetta che Auth sia pronto
     await FirebaseAuth.instance.authStateChanges().first;
 
     final user = FirebaseAuth.instance.currentUser;
