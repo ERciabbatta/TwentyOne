@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:untitled/profilo.dart';
 import 'package:untitled/widget/MyBottomBar.dart';
@@ -6,13 +7,29 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  runZonedGuarded(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
 
-  await NotificationService().init();
-  await NotificationService().richiediPermessi();
+    final notifService = NotificationService();
+    await notifService.init();
+    await notifService.richiediPermessi();
 
-  runApp(const MyApp());
+    runApp(const MyApp());
+  }, (error, stack) {
+    runApp(MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'ERRORE:\n$error\n\nSTACK:\n$stack',
+            style: const TextStyle(fontSize: 12, color: Colors.red),
+          ),
+        ),
+      ),
+    ));
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -52,8 +69,9 @@ class _AuthGateState extends State<_AuthGate> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      await NotificationService().scheduleNotificheEventi();
-      await NotificationService().scheduleMotivazionale();
+      final notifService = NotificationService();
+      await notifService.scheduleNotificheEventi();
+      await notifService.scheduleMotivazionale();
     }
   }
 
