@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/auth.dart';
+import 'package:untitled/widget/auth.dart';
 
 class LoginRegister extends StatefulWidget {
   const LoginRegister({super.key});
@@ -24,6 +24,9 @@ class _LoginRegisterState extends State<LoginRegister> {
         email: _controllerEmail.text,
         password: _controllerPassword.text,
       );
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message);
     }
@@ -37,6 +40,9 @@ class _LoginRegisterState extends State<LoginRegister> {
       );
       await FirebaseAuth.instance.currentUser
           ?.updateDisplayName(_controllerName.text.trim());
+      if (mounted) {
+        Navigator.of(context).popUntil((route) => route.isFirst);
+      }
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message);
     }

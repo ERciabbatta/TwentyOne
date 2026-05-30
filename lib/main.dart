@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:untitled/profilo.dart';
-import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:untitled/pages/non_iscritto.dart';
+import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
-import 'package:untitled/firebase_options.dart';
+import 'package:untitled/widget/firebase_options.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -40,46 +40,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const _AuthGate(),
-      routes: {
-        '/profilo': (context) => Profilo(),
-      },
+    return const MaterialApp(
+      title: 'TwentyOne',
+      home: AuthGate(),
     );
   }
 }
 
-class _AuthGate extends StatefulWidget {
-  const _AuthGate();
-
-  @override
-  State<_AuthGate> createState() => _AuthGateState();
-}
-
-class _AuthGateState extends State<_AuthGate> {
-  @override
-  void initState() {
-    super.initState();
-    _aspettaUtenteESchedula();
-  }
-
-  Future<void> _aspettaUtenteESchedula() async {
-    await FirebaseAuth.instance.authStateChanges().first;
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final notifService = NotificationService();
-      await notifService.scheduleNotificheEventi();
-      await notifService.scheduleMotivazionale();
-    }
-  }
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MyBottomBar();
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF7A9CC6)),
+            ),
+          );
+        }
+
+        if (snapshot.data == null) {
+          return const NonIscritto();
+        }
+
+        _scheduleNotifiche();
+        return const MyBottomBar();
+      },
+    );
+  }
+
+  Future<void> _scheduleNotifiche() async {
+    final notifService = NotificationService();
+    await notifService.scheduleNotificheEventi();
+    await notifService.scheduleMotivazionale();
   }
 }

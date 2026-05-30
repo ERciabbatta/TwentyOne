@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/calendario.dart';
+import 'package:untitled/pages/calendario.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/auth.dart';
+import 'package:untitled/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:untitled/widget/quotes_data.dart';
 
 class Home extends StatefulWidget {
@@ -20,9 +19,6 @@ class _HomeState extends State<Home> {
 
   int _streakCount = 0;
 
-  static const _keyStreak = 'streak_count';
-  static const _keyLastDate = 'last_active_date';
-
   @override
   void initState() {
     super.initState();
@@ -32,40 +28,36 @@ class _HomeState extends State<Home> {
   }
 
   Future<int> checkAndUpdateStreak() async {
-    final prefs = await SharedPreferences.getInstance();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 0;
+
+    final doc = FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid);
+
+    final snapshot = await doc.get();
+    final data = snapshot.data();
+
     final today = DateTime.now();
     final todayStr = _dateKey(today);
 
-    final lastDateStr = prefs.getString(_keyLastDate);
-    final currentStreak = prefs.getInt(_keyStreak) ?? 0;
+    final lastDateStr = data?['lastActiveDate'] as String?;
+    final currentStreak = data?['streak'] as int? ?? 0;
 
     if (lastDateStr == null) {
-      await prefs.setString(_keyLastDate, todayStr);
-      await prefs.setInt(_keyStreak, 1);
+      await doc.set({'lastActiveDate': todayStr, 'streak': 1}, SetOptions(merge: true));
       return 1;
     }
 
     final lastDate = DateTime.parse(lastDateStr);
     final diff = _dayDifference(lastDate, today);
 
-    int newStreak;
+    if (diff == 0) return currentStreak;
 
-    if (diff == 0) {
-      return currentStreak;
-    } else if (diff == 1) {
-      newStreak = currentStreak + 1;
-    } else {
-      newStreak = 1;
-    }
+    final newStreak = diff == 1 ? currentStreak + 1 : 1;
 
-    await prefs.setString(_keyLastDate, todayStr);
-    await prefs.setInt(_keyStreak, newStreak);
+    await doc.set({'lastActiveDate': todayStr, 'streak': newStreak}, SetOptions(merge: true));
     return newStreak;
-  }
-
-  Future<int> getCurrentStreak() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keyStreak) ?? 0;
   }
 
   String _dateKey(DateTime date) =>

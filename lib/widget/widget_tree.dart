@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled/profilo.dart';
+import 'package:untitled/pages/profilo.dart';
+import 'package:untitled/pages/non_iscritto.dart';
 import 'auth.dart';
-import 'login_register.dart';
 
 class WidgetTree extends StatelessWidget {
   const WidgetTree({super.key});
@@ -13,13 +13,16 @@ class WidgetTree extends StatelessWidget {
       stream: Auth().authStateChanges,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return const Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: CircularProgressIndicator(color: Color(0xFF7A9CC6)),
+            ),
+          );
         }
 
-        final user = snapshot.data;
-
-        if (user == null) {
-          return const LoginRegister();
+        if (snapshot.data == null) {
+          return const NonIscritto();
         }
 
         return Profilo();
