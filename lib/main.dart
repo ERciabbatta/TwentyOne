@@ -5,11 +5,14 @@ import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
+import 'package:untitled/firebase_options.dart';
 
 void main() async {
   runZonedGuarded(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     final notifService = NotificationService();
     await notifService.init();
