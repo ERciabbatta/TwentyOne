@@ -16,7 +16,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   int _streakCount = 0;
 
   @override
@@ -31,16 +30,12 @@ class _HomeState extends State<Home> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 0;
 
-    final doc = FirebaseFirestore.instance
-        .collection('utenti')
-        .doc(user.uid);
-
+    final doc = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
     final snapshot = await doc.get();
     final data = snapshot.data();
 
     final today = DateTime.now();
     final todayStr = _dateKey(today);
-
     final lastDateStr = data?['lastActiveDate'] as String?;
     final currentStreak = data?['streak'] as int? ?? 0;
 
@@ -55,7 +50,6 @@ class _HomeState extends State<Home> {
     if (diff == 0) return currentStreak;
 
     final newStreak = diff == 1 ? currentStreak + 1 : 1;
-
     await doc.set({'lastActiveDate': todayStr, 'streak': newStreak}, SetOptions(merge: true));
     return newStreak;
   }
@@ -68,6 +62,10 @@ class _HomeState extends State<Home> {
     final db = DateTime(b.year, b.month, b.day);
     return db.difference(da).inDays;
   }
+
+  // DateTime.weekday: 1=Lun, 2=Mar, ..., 7=Dom
+  // Array giorni in Firestore: 0=Lun, 1=Mar, ..., 6=Dom
+  int get _giornoOggi => DateTime.now().weekday - 1;
 
   Stream<QuerySnapshot> _noteStream() {
     final user = FirebaseAuth.instance.currentUser;
@@ -167,7 +165,8 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _buildFasciaOraria(IconData icon, String titolo, List<Map<String, dynamic>> note, bool showDivider) {
+  Widget _buildFasciaOraria(IconData icon, String titolo,
+      List<Map<String, dynamic>> note, bool showDivider) {
     return Column(
       children: [
         Padding(
@@ -203,8 +202,7 @@ class _HomeState extends State<Home> {
             ],
           ),
         ),
-        if (showDivider)
-          const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+        if (showDivider) const Divider(color: Color(0xFFE2E8F0), thickness: 1),
       ],
     );
   }
@@ -215,7 +213,8 @@ class _HomeState extends State<Home> {
     final creazione = user.metadata.creationTime;
     if (creazione == null) return 21;
     final oggi = DateTime.now();
-    final giornoCreazione = DateTime(creazione.year, creazione.month, creazione.day);
+    final giornoCreazione =
+    DateTime(creazione.year, creazione.month, creazione.day);
     final oggiPulito = DateTime(oggi.year, oggi.month, oggi.day);
     final passati = oggiPulito.difference(giornoCreazione).inDays;
     final rimanenti = 21 - passati;
@@ -239,14 +238,14 @@ class _HomeState extends State<Home> {
                 MaterialPageRoute(builder: (context) => const Calendario()),
               );
             },
-            icon: const Icon(Icons.calendar_month_outlined, color: Color(0xFF3A4A5C)),
+            icon: const Icon(Icons.calendar_month_outlined,
+                color: Color(0xFF3A4A5C)),
           ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _noteStream(),
         builder: (context, snapshot) {
-
           final mattina = <Map<String, dynamic>>[];
           final pomeriggio = <Map<String, dynamic>>[];
           final sera = <Map<String, dynamic>>[];
@@ -254,10 +253,26 @@ class _HomeState extends State<Home> {
           if (snapshot.hasData) {
             for (final doc in snapshot.data!.docs) {
               final nota = doc.data() as Map<String, dynamic>;
+
+              // Mostra solo le note del giorno della settimana corrente
+              final giorni = List<int>.from(nota['giorni'] ?? []);
+              if (!giorni.contains(_giornoOggi)) continue;
+
               final fascia = _getFasciaOraria(nota['inizio'] ?? '');
               if (fascia == 'mattina') mattina.add(nota);
               else if (fascia == 'pomeriggio') pomeriggio.add(nota);
               else sera.add(nota);
+            }
+
+            // Ordina ciascuna fascia per orario di inizio
+            for (final lista in [mattina, pomeriggio, sera]) {
+              lista.sort((a, b) {
+                final aMin = _getOra(a['inizio'] ?? '00:00') * 60 +
+                    (int.tryParse((a['inizio'] ?? '00:00').split(':')[1]) ?? 0);
+                final bMin = _getOra(b['inizio'] ?? '00:00') * 60 +
+                    (int.tryParse((b['inizio'] ?? '00:00').split(':')[1]) ?? 0);
+                return aMin.compareTo(bMin);
+              });
             }
           }
 
@@ -266,7 +281,6 @@ class _HomeState extends State<Home> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
                 Row(
                   children: [
                     _buildObiettivoCard(
@@ -337,9 +351,12 @@ class _HomeState extends State<Home> {
                   ),
                   child: Column(
                     children: [
-                      _buildFasciaOraria(Icons.wb_sunny_outlined, 'Mattina', mattina, true),
-                      _buildFasciaOraria(Icons.wb_twilight_outlined, 'Pomeriggio', pomeriggio, true),
-                      _buildFasciaOraria(Icons.nightlight_outlined, 'Sera', sera, false),
+                      _buildFasciaOraria(
+                          Icons.wb_sunny_outlined, 'Mattina', mattina, true),
+                      _buildFasciaOraria(Icons.wb_twilight_outlined,
+                          'Pomeriggio', pomeriggio, true),
+                      _buildFasciaOraria(
+                          Icons.nightlight_outlined, 'Sera', sera, false),
                     ],
                   ),
                 ),
