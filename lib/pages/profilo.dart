@@ -3,7 +3,7 @@
     import 'package:firebase_auth/firebase_auth.dart';
     import 'package:untitled/widget/auth.dart';
     import 'package:untitled/pages/cambia_password.dart';
-    import 'package:untitled/widget/notifiche.dart';
+    import 'package:untitled/pages/notifiche.dart';
 
     class Profilo extends StatelessWidget {
       Profilo({super.key});

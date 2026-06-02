@@ -1,5 +1,4 @@
-import 'package:flutter/'
-    'material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
 
@@ -13,6 +12,7 @@ class Notifiche extends StatefulWidget {
 class _NotificheState extends State<Notifiche> {
   bool _eventiAttivi = true;
   bool _motivazionaliAttive = true;
+  bool _checkInAttivo = true;
   bool _caricamento = true;
 
   final _service = NotificationService();
@@ -26,9 +26,11 @@ class _NotificheState extends State<Notifiche> {
   Future<void> _caricaPreferenze() async {
     final eventi = await _service.getEventiAttivi();
     final motivazionali = await _service.getMotivazionaliAttive();
+    final checkIn = await _service.getCheckInAttivo();
     setState(() {
       _eventiAttivi = eventi;
       _motivazionaliAttive = motivazionali;
+      _checkInAttivo = checkIn;
       _caricamento = false;
     });
   }
@@ -81,6 +83,19 @@ class _NotificheState extends State<Notifiche> {
               onChanged: (val) async {
                 setState(() => _eventiAttivi = val);
                 await _service.setEventiAttivi(val);
+              },
+            ),
+
+            const SizedBox(height: 10),
+
+            _ToggleTile(
+              icon: Icons.nightlight_round,
+              label: 'Check-in serale',
+              descrizione: 'Promemoria alle 22:00 per il check-in',
+              value: _checkInAttivo,
+              onChanged: (val) async {
+                setState(() => _checkInAttivo = val);
+                await _service.setCheckInAttivo(val);
               },
             ),
 
