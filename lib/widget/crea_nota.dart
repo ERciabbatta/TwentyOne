@@ -4,7 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class CreaNota extends StatefulWidget {
-  const CreaNota({super.key});
+  final int giornoPreselezionato;
+
+  const CreaNota({super.key, required this.giornoPreselezionato});
 
   @override
   State<CreaNota> createState() => _CreaNotaState();
@@ -14,11 +16,18 @@ class _CreaNotaState extends State<CreaNota> {
   final TextEditingController _controllerTesto = TextEditingController();
   TimeOfDay? _orarioInizio;
   TimeOfDay? _orarioFine;
-
   String? _pickerAperto;
-
   int _oreSelezionate = 0;
   int _minutiSelezionati = 0;
+  late List<bool> _giorniSelezionati;
+
+  final List<String> _giorni = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+
+  @override
+  void initState() {
+    super.initState();
+    _giorniSelezionati = List.generate(7, (i) => i == widget.giornoPreselezionato);
+  }
 
   void _apriPicker(String quale) {
     final orario = quale == 'inizio' ? _orarioInizio : _orarioFine;
@@ -52,13 +61,16 @@ class _CreaNotaState extends State<CreaNota> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    final nuovoInizio = _orarioInizio;
-    final nuovoFine = _orarioFine;
+    if (_orarioInizio == null || _orarioFine == null) return;
 
-    if (nuovoInizio == null || nuovoFine == null) return;
+    final giorniScelti = <int>[];
+    for (int i = 0; i < 7; i++) {
+      if (_giorniSelezionati[i]) giorniScelti.add(i);
+    }
+    if (giorniScelti.isEmpty) return;
 
-    final nuovoIniziMin = nuovoInizio.hour * 60 + nuovoInizio.minute;
-    final nuovoFineMin = nuovoFine.hour * 60 + nuovoFine.minute;
+    final nuovoIniziMin = _orarioInizio!.hour * 60 + _orarioInizio!.minute;
+    final nuovoFineMin = _orarioFine!.hour * 60 + _orarioFine!.minute;
 
     final snapshot = await FirebaseFirestore.instance
         .collection('utenti')
@@ -70,17 +82,19 @@ class _CreaNotaState extends State<CreaNota> {
       final data = doc.data();
       final inizioStr = data['inizio'] as String? ?? '';
       final fineStr = data['fine'] as String? ?? '';
+      final giorniEsistenti = List<int>.from(data['giorni'] ?? []);
+
+      final haGiornoInComune = giorniScelti.any((g) => giorniEsistenti.contains(g));
+      if (!haGiornoInComune) continue;
 
       if (inizioStr == '--:--' || fineStr == '--:--') continue;
 
       final partiInizio = inizioStr.split(':');
       final partiFine = fineStr.split(':');
-
       final esistenteIniziMin = int.parse(partiInizio[0]) * 60 + int.parse(partiInizio[1]);
       final esistenteFineMin = int.parse(partiFine[0]) * 60 + int.parse(partiFine[1]);
 
-      final siSovrappone =
-          nuovoIniziMin < esistenteFineMin && nuovoFineMin > esistenteIniziMin;
+      final siSovrappone = nuovoIniziMin < esistenteFineMin && nuovoFineMin > esistenteIniziMin;
 
       if (siSovrappone) {
         if (context.mounted) {
@@ -101,8 +115,9 @@ class _CreaNotaState extends State<CreaNota> {
         .collection('note')
         .add({
       'testo': _controllerTesto.text,
-      'inizio': _formatOrario(nuovoInizio),
-      'fine': _formatOrario(nuovoFine),
+      'inizio': _formatOrario(_orarioInizio),
+      'fine': _formatOrario(_orarioFine),
+      'giorni': giorniScelti,
       'timestamp': FieldValue.serverTimestamp(),
     });
 
@@ -115,7 +130,6 @@ class _CreaNotaState extends State<CreaNota> {
     required ValueChanged<int> onChanged,
   }) {
     final controller = FixedExtentScrollController(initialItem: valore);
-
     return SizedBox(
       width: 64,
       height: 140,
@@ -135,9 +149,7 @@ class _CreaNotaState extends State<CreaNota> {
                 index.toString().padLeft(2, '0'),
                 style: GoogleFonts.playfairDisplay(
                   fontSize: selezionato ? 26 : 18,
-                  fontWeight: selezionato
-                      ? FontWeight.w600
-                      : FontWeight.w400,
+                  fontWeight: selezionato ? FontWeight.w600 : FontWeight.w400,
                   color: selezionato
                       ? const Color(0xFF3A4A5C)
                       : const Color(0xFFB8C8DA),
@@ -154,7 +166,6 @@ class _CreaNotaState extends State<CreaNota> {
     return Column(
       children: [
         const SizedBox(height: 16),
-
         Text(
           _pickerAperto == 'inizio' ? 'Orario di inizio' : 'Orario di fine',
           style: const TextStyle(
@@ -163,9 +174,7 @@ class _CreaNotaState extends State<CreaNota> {
             letterSpacing: 0.4,
           ),
         ),
-
         const SizedBox(height: 12),
-
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -199,9 +208,7 @@ class _CreaNotaState extends State<CreaNota> {
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
         Row(
           children: [
             Expanded(
@@ -274,7 +281,6 @@ class _CreaNotaState extends State<CreaNota> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             Text(
               'Nuova nota',
               style: GoogleFonts.playfairDisplay(
@@ -284,9 +290,9 @@ class _CreaNotaState extends State<CreaNota> {
               ),
             ),
 
-            const SizedBox(height: 16),
-
             if (_pickerAperto == null) ...[
+              const SizedBox(height: 16),
+
               TextField(
                 controller: _controllerTesto,
                 style: const TextStyle(color: Color(0xFF3A4A5C)),
@@ -306,6 +312,50 @@ class _CreaNotaState extends State<CreaNota> {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              const Text(
+                'Giorni',
+                style: TextStyle(
+                  color: Color(0xFF8A9BB5),
+                  fontSize: 13,
+                  letterSpacing: 0.4,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(7, (index) {
+                  final selezionato = _giorniSelezionati[index];
+                  return GestureDetector(
+                    onTap: () => setState(() => _giorniSelezionati[index] = !selezionato),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: selezionato
+                            ? const Color(0xFF7A9CC6)
+                            : const Color(0xFFE8EEF7),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          _giorni[index],
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: selezionato
+                                ? Colors.white
+                                : const Color(0xFF8A9BB5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
               const SizedBox(height: 20),
 
               Row(
@@ -314,8 +364,7 @@ class _CreaNotaState extends State<CreaNota> {
                   GestureDetector(
                     onTap: () => _apriPicker('inizio'),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8EEF7),
                         borderRadius: BorderRadius.circular(14),
@@ -343,15 +392,11 @@ class _CreaNotaState extends State<CreaNota> {
                       ),
                     ),
                   ),
-
-                  const Icon(Icons.arrow_forward,
-                      color: Color(0xFF7A9CC6), size: 22),
-
+                  const Icon(Icons.arrow_forward, color: Color(0xFF7A9CC6), size: 22),
                   GestureDetector(
                     onTap: () => _apriPicker('fine'),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE8EEF7),
                         borderRadius: BorderRadius.circular(14),
@@ -399,8 +444,7 @@ class _CreaNotaState extends State<CreaNota> {
                   ),
                   child: const Text(
                     'Aggiungi Nota',
-                    style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
