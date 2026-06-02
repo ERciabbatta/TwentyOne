@@ -90,43 +90,71 @@ class NotificationService {
     }
   }
 
+  tz.TZDateTime? _prossimaTriggerTimePerGiorno(String orario, int weekday) {
+    final parts = orario.split(':');
+    if (parts.length != 2) return null;
+    final ore = int.tryParse(parts[0]);
+    final minuti = int.tryParse(parts[1]);
+    if (ore == null || minuti == null) return null;
+
+    final now = tz.TZDateTime.now(tz.local);
+
+    var candidate = tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti)
+        .subtract(const Duration(minutes: 15));
+
+    while (candidate.weekday != weekday || candidate.isBefore(now)) {
+      candidate = candidate.add(const Duration(days: 1));
+    }
+
+    return candidate;
+  }
+
   Future<void> scheduleNotificheEventi() async {
     final attive = await getEventiAttivi();
     if (!attive) return;
     await cancellaNotificheEventi();
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
+
     final snapshot = await FirebaseFirestore.instance
         .collection('utenti')
         .doc(user.uid)
         .collection('note')
         .get();
+
     for (final doc in snapshot.docs) {
       final data = doc.data();
       final inizio = data['inizio'] as String?;
       final testo = data['testo'] as String? ?? 'Hai un evento tra 15 minuti';
-      if (inizio == null) continue;
-      final notificaTime = _prossimaTriggerTime(inizio);
-      if (notificaTime == null) continue;
-      final id = doc.id.hashCode.abs() % 100000;
-      await _plugin.zonedSchedule(
-        id: id,
-        title: '⏰ Tra 15 minuti',
-        body: testo,
-        scheduledDate: notificaTime,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'eventi_channel',
-            'Notifiche eventi',
-            channelDescription: 'Promemoria 15 minuti prima degli eventi',
-            importance: Importance.high,
-            priority: Priority.high,
+      final giorni = List<int>.from(data['giorni'] ?? []);
+      if (inizio == null || giorni.isEmpty) continue;
+
+      for (final giorno in giorni) {
+        final weekday = giorno + 1;
+        final notificaTime = _prossimaTriggerTimePerGiorno(inizio, weekday);
+        if (notificaTime == null) continue;
+
+        final id = (doc.id.hashCode.abs() + giorno * 100003) % 100000;
+
+        await _plugin.zonedSchedule(
+          id: id,
+          title: '⏰ Tra 15 minuti',
+          body: testo,
+          scheduledDate: notificaTime,
+          notificationDetails: const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'eventi_channel',
+              'Notifiche eventi',
+              channelDescription: 'Promemoria 15 minuti prima degli eventi',
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+            iOS: DarwinNotificationDetails(),
           ),
-          iOS: DarwinNotificationDetails(),
-        ),
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        matchDateTimeComponents: DateTimeComponents.time,
-      );
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+      }
     }
   }
 
@@ -139,8 +167,10 @@ class NotificationService {
         .collection('note')
         .get();
     for (final doc in snapshot.docs) {
-      final id = doc.id.hashCode.abs() % 100000;
-      await _plugin.cancel(id: id);
+      for (int giorno = 0; giorno < 7; giorno++) {
+        final id = (doc.id.hashCode.abs() + giorno * 100003) % 100000;
+        await _plugin.cancel(id: id);
+      }
     }
   }
 
