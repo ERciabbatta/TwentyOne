@@ -212,7 +212,7 @@ class NotificationService {
     await cancellaCheckIn();
 
     final now = tz.TZDateTime.now(tz.local);
-    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 0, 0);
+    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
 
     if (trigger.isBefore(now)) {
       trigger = trigger.add(const Duration(days: 1));
@@ -257,7 +257,7 @@ class NotificationService {
     }
     return notificaTime;
   }
-
+/*
   Future<void> scheduleTestNotifica() async {
     final trigger = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 30));
     await _plugin.zonedSchedule(
@@ -276,6 +276,6 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
     print('Schedulato per: $trigger');
-  }
+  }*/
 
 }

@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:untitled/widget/quotes_data.dart';
-import 'package:untitled/widget/servizio_notifiche.dart';
 
 class Home extends StatefulWidget {
   Home({super.key});
@@ -331,14 +330,6 @@ class _HomeState extends State<Home> {
                 ),
 
                 const SizedBox(height: 16),
-
-                ElevatedButton(
-                  onPressed: () async {
-                    final notifService = NotificationService();
-                    await notifService.scheduleTestNotifica();
-                  },
-                  child: const Text('TEST NOTIFICA'),
-                ),
 
                 Container(
                   width: double.infinity,
