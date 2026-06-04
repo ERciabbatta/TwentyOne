@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/calendario.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/pages/checkin.dart';
 import 'package:untitled/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:untitled/widget/quotes_data.dart';
+import 'package:untitled/widget/servizio_notifiche.dart';
 
 class Home extends StatefulWidget {
   Home({super.key});
@@ -64,8 +64,6 @@ class _HomeState extends State<Home> {
     return db.difference(da).inDays;
   }
 
-  // DateTime.weekday: 1=Lun, 2=Mar, ..., 7=Dom
-  // Array giorni in Firestore: 0=Lun, 1=Mar, ..., 6=Dom
   int get _giornoOggi => DateTime.now().weekday - 1;
 
   Stream<QuerySnapshot> _noteStream() {
@@ -255,7 +253,6 @@ class _HomeState extends State<Home> {
             for (final doc in snapshot.data!.docs) {
               final nota = doc.data() as Map<String, dynamic>;
 
-              // Mostra solo le note del giorno della settimana corrente
               final giorni = List<int>.from(nota['giorni'] ?? []);
               if (!giorni.contains(_giornoOggi)) continue;
 
@@ -265,7 +262,6 @@ class _HomeState extends State<Home> {
               else sera.add(nota);
             }
 
-            // Ordina ciascuna fascia per orario di inizio
             for (final lista in [mattina, pomeriggio, sera]) {
               lista.sort((a, b) {
                 final aMin = _getOra(a['inizio'] ?? '00:00') * 60 +
@@ -335,6 +331,14 @@ class _HomeState extends State<Home> {
                 ),
 
                 const SizedBox(height: 16),
+
+                ElevatedButton(
+                  onPressed: () async {
+                    final notifService = NotificationService();
+                    await notifService.scheduleTestNotifica();
+                  },
+                  child: const Text('TEST NOTIFICA'),
+                ),
 
                 Container(
                   width: double.infinity,

@@ -47,8 +47,15 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _notificheProgrammate = false;
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +72,15 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.data == null) {
+          _notificheProgrammate = false;
           return const NonIscritto();
         }
 
-        _scheduleNotifiche();
+        if (!_notificheProgrammate) {
+          _notificheProgrammate = true;
+          _scheduleNotifiche();
+        }
+
         return const MyBottomBar();
       },
     );
@@ -78,5 +90,6 @@ class AuthGate extends StatelessWidget {
     final notifService = NotificationService();
     await notifService.scheduleNotificheEventi();
     await notifService.scheduleMotivazionale();
+    await notifService.scheduleCheckIn();
   }
 }
