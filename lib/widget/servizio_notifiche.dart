@@ -276,6 +276,7 @@ class NotificationService {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
     print('Schedulato per: $trigger');
+    //test
   }*/
 
 }
