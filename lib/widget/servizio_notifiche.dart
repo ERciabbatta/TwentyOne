@@ -259,7 +259,7 @@ class NotificationService {
     await cancellaCheckIn();
 
     final now = tz.TZDateTime.now(tz.local);
-    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
+    var trigger = now.add(const Duration(seconds: 10));
 
     if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
       trigger = trigger.add(const Duration(days: 1));
