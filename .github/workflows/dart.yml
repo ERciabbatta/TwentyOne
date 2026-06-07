@@ -39,4 +39,4 @@ jobs:
           file: build/ios/iphoneos/TwentyOne.ipa
           tag: v1.2.1
           overwrite: true
-          body: "This is first release"
+          body: "IOS Build"
