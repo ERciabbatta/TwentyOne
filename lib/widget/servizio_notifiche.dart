@@ -32,16 +32,39 @@ class NotificationService {
     await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
     );
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+      'checkin_channel',
+      'Check-in giornaliero',
+      description: 'Promemoria serale per il check-in',
+      importance: Importance.high,
+    ));
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+      'eventi_channel',
+      'Notifiche eventi',
+      description: 'Promemoria 15 minuti prima degli eventi',
+      importance: Importance.high,
+    ));
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+      'motivazionali_channel',
+      'Frasi motivazionali',
+      description: 'Frasi di ispirazione quotidiana',
+      importance: Importance.defaultImportance,
+    ));
   }
 
   Future<void> richiediPermessi() async {
     await _plugin
-        .resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(alert: true, badge: true, sound: true);
     await _plugin
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
@@ -180,8 +203,7 @@ class NotificationService {
     await cancellaMotivazionali();
     final random = Random();
     final oreRandom = 4 + random.nextInt(7);
-    final trigger =
-    tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
+    final trigger = tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
     final quote = allQuotes[random.nextInt(allQuotes.length)];
     await _plugin.zonedSchedule(
       id: 999999,
@@ -214,7 +236,7 @@ class NotificationService {
     final now = tz.TZDateTime.now(tz.local);
     var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
 
-    if (trigger.isBefore(now)) {
+    if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
       trigger = trigger.add(const Duration(days: 1));
     }
 
@@ -257,26 +279,4 @@ class NotificationService {
     }
     return notificaTime;
   }
-/*
-  Future<void> scheduleTestNotifica() async {
-    final trigger = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 30));
-    await _plugin.zonedSchedule(
-      id: 123456,
-      title: '🧪 Test',
-      body: 'Scheduling funziona!',
-      scheduledDate: trigger,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'checkin_channel',
-          'Check-in giornaliero',
-          importance: Importance.max,
-          priority: Priority.max,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
-    print('Schedulato per: $trigger');
-    //test
-  }*/
-
 }
