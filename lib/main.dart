@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:untitled/pages/checkin.dart';
 import 'package:untitled/pages/non_iscritto.dart';
 import 'package:untitled/widget/MyBottomBar.dart';
 import 'package:untitled/widget/servizio_notifiche.dart';
@@ -41,9 +42,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'TwentyOne',
-      home: AuthGate(),
+      navigatorKey: NotificationService.navigatorKey,
+      routes: {
+        '/checkin': (context) => const CheckIn(),
+      },
+      home: const AuthGate(),
     );
   }
 }
@@ -80,6 +85,9 @@ class _AuthGateState extends State<AuthGate> {
         if (!_notificheProgrammate) {
           _notificheProgrammate = true;
           _scheduleNotifiche();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            NotificationService().handleLaunchNotification();
+          });
         }
 
         return const MyBottomBar();

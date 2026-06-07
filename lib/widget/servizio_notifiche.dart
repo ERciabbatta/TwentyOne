@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -20,6 +21,8 @@ class NotificationService {
   static const String _keyCheckIn = 'notifiche_checkin';
   static const int _idCheckIn = 888888;
 
+  static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   Future<void> init() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Rome'));
@@ -31,6 +34,7 @@ class NotificationService {
     );
     await _plugin.initialize(
       settings: const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
     await _plugin
@@ -57,6 +61,27 @@ class NotificationService {
       description: 'Frasi di ispirazione quotidiana',
       importance: Importance.defaultImportance,
     ));
+  }
+
+  void _onNotificationTap(NotificationResponse response) {
+    if (response.id == _idCheckIn) {
+      _navigateToCheckIn();
+    }
+  }
+
+  void _navigateToCheckIn() {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+    Navigator.of(context).pushNamed('/checkin');
+  }
+
+  Future<void> handleLaunchNotification() async {
+    final details = await _plugin.getNotificationAppLaunchDetails();
+    if (details != null &&
+        details.didNotificationLaunchApp &&
+        details.notificationResponse?.id == _idCheckIn) {
+      _navigateToCheckIn();
+    }
   }
 
   Future<void> richiediPermessi() async {
