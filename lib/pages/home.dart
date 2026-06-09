@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:untitled/pages/calendario.dart';
+import 'package:untitled/pages/completamento.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:untitled/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -17,13 +18,58 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _streakCount = 0;
+  int _giorniRimanenti = 21;
+  bool _cicloCompletato = false;
 
   @override
   void initState() {
     super.initState();
-    checkAndUpdateStreak().then((val) {
-      if (mounted) setState(() => _streakCount = val);
-    });
+    _caricaDatiUtente();
+  }
+
+  Future<void> _caricaDatiUtente() async {
+    final streak = await checkAndUpdateStreak();
+    final rimanenti = await _calcolaGiorniRimanenti();
+    if (mounted) {
+      setState(() {
+        _streakCount = streak;
+        _giorniRimanenti = rimanenti;
+        _cicloCompletato = rimanenti == 0;
+      });
+    }
+  }
+
+  Future<int> _calcolaGiorniRimanenti() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return 21;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .get();
+
+    final dataInizioStr = doc.data()?['dataInizio'] as String?;
+
+    DateTime dataInizio;
+    if (dataInizioStr != null) {
+      dataInizio = DateTime.parse(dataInizioStr);
+    } else {
+      final creazione = user.metadata.creationTime;
+      if (creazione == null) return 21;
+      dataInizio = DateTime(creazione.year, creazione.month, creazione.day);
+      final oggiStr =
+          '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
+      await FirebaseFirestore.instance
+          .collection('utenti')
+          .doc(user.uid)
+          .set({'dataInizio': '${dataInizio.year}-${dataInizio.month.toString().padLeft(2, '0')}-${dataInizio.day.toString().padLeft(2, '0')}'}, SetOptions(merge: true));
+    }
+
+    final oggi = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final inizio = DateTime(dataInizio.year, dataInizio.month, dataInizio.day);
+    final passati = oggi.difference(inizio).inDays;
+    final rimanenti = 21 - passati;
+    return rimanenti < 0 ? 0 : rimanenti;
   }
 
   Future<int> checkAndUpdateStreak() async {
@@ -205,18 +251,58 @@ class _HomeState extends State<Home> {
     );
   }
 
-  int _giorniAlTraguardo() {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return 21;
-    final creazione = user.metadata.creationTime;
-    if (creazione == null) return 21;
-    final oggi = DateTime.now();
-    final giornoCreazione =
-    DateTime(creazione.year, creazione.month, creazione.day);
-    final oggiPulito = DateTime(oggi.year, oggi.month, oggi.day);
-    final passati = oggiPulito.difference(giornoCreazione).inDays;
-    final rimanenti = 21 - passati;
-    return rimanenti < 0 ? 0 : rimanenti;
+  Widget _buildBannerCompletamento() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const Completamento()),
+        ).then((_) => _caricaDatiUtente());
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF7A9CC6), Color(0xFF5B7FA8)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            const Text('🏆', style: TextStyle(fontSize: 36)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Hai completato i 21 giorni!',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Tocca per vedere il riepilogo',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Colors.white70, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -251,10 +337,8 @@ class _HomeState extends State<Home> {
           if (snapshot.hasData) {
             for (final doc in snapshot.data!.docs) {
               final nota = doc.data() as Map<String, dynamic>;
-
               final giorni = List<int>.from(nota['giorni'] ?? []);
               if (!giorni.contains(_giornoOggi)) continue;
-
               final fascia = _getFasciaOraria(nota['inizio'] ?? '');
               if (fascia == 'mattina') mattina.add(nota);
               else if (fascia == 'pomeriggio') pomeriggio.add(nota);
@@ -277,6 +361,10 @@ class _HomeState extends State<Home> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (_cicloCompletato) ...[
+                  _buildBannerCompletamento(),
+                  const SizedBox(height: 16),
+                ],
                 Row(
                   children: [
                     _buildObiettivoCard(
@@ -289,14 +377,12 @@ class _HomeState extends State<Home> {
                     _buildObiettivoCard(
                       Icons.star_border,
                       'Obiettivo 21 giorni',
-                      '${_giorniAlTraguardo()}',
+                      '$_giorniRimanenti',
                       'GIORNI RIMANENTI',
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 16),
-
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
@@ -328,9 +414,7 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -356,7 +440,6 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 30),
               ],
             ),
