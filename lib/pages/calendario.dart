@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:untitled/widget/auth.dart';
+import 'package:twentyone/widget/auth.dart';
 
 class Calendario extends StatefulWidget {
   const Calendario({super.key});

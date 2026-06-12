@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/widget/servizio_notifiche.dart';
+import 'package:twentyone/widget/servizio_notifiche.dart';
 
 class Notifiche extends StatefulWidget {
   const Notifiche({super.key});

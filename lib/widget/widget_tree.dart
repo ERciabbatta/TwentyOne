@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:untitled/pages/profilo.dart';
-import 'package:untitled/pages/non_iscritto.dart';
+import 'package:twentyone/pages/profilo.dart';
+import 'package:twentyone/pages/non_iscritto.dart';
 import 'auth.dart';
 
 class WidgetTree extends StatelessWidget {

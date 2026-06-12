@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/widget/auth.dart';
+import 'package:twentyone/widget/auth.dart';
 
 class LoginRegister extends StatefulWidget {
   const LoginRegister({super.key});

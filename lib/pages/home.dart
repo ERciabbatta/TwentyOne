@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/pages/calendario.dart';
-import 'package:untitled/pages/completamento.dart';
+import 'package:twentyone/pages/calendario.dart';
+import 'package:twentyone/pages/completamento.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/widget/auth.dart';
+import 'package:twentyone/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:untitled/widget/quotes_data.dart';
+import 'package:twentyone/widget/quotes_data.dart';
 
 class Home extends StatefulWidget {
   Home({super.key});

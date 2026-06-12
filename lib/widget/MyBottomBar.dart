@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/pages/home.dart';
-import 'package:untitled/pages/note.dart';
-import 'package:untitled/pages/inspo.dart';
-import 'package:untitled/widget/widget_tree.dart';
+import 'package:twentyone/pages/home.dart';
+import 'package:twentyone/pages/note.dart';
+import 'package:twentyone/pages/inspo.dart';
+import 'package:twentyone/widget/widget_tree.dart';
 
 class MyBottomBar extends StatefulWidget {
   const MyBottomBar({super.key});

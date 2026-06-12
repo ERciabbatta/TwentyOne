@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/widget/quotes_data.dart';
+import 'package:twentyone/widget/quotes_data.dart';
 
 const Color _bgColor = Color(0xFFF7F9FC);
 const Color _cardBlue = Color(0xFFD6E4F5);

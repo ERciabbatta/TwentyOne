@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:untitled/pages/login_register.dart';
+import 'package:twentyone/pages/login_register.dart';
 
 class NonIscritto extends StatelessWidget {
   const NonIscritto({super.key});

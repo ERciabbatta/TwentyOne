@@ -6,7 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:untitled/widget/quotes_data.dart';
+import 'package:twentyone/widget/quotes_data.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();

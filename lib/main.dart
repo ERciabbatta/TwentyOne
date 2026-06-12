@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:untitled/pages/checkin.dart';
-import 'package:untitled/pages/non_iscritto.dart';
-import 'package:untitled/widget/MyBottomBar.dart';
-import 'package:untitled/widget/servizio_notifiche.dart';
-import 'package:untitled/widget/firebase_options.dart';
+import 'package:twentyone/pages/checkin.dart';
+import 'package:twentyone/pages/non_iscritto.dart';
+import 'package:twentyone/widget/MyBottomBar.dart';
+import 'package:twentyone/widget/servizio_notifiche.dart';
+import 'package:twentyone/widget/firebase_options.dart';
 
 void main() async {
   runZonedGuarded(() async {

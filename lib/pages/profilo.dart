@@ -1,9 +1,9 @@
     import 'package:flutter/material.dart';
     import 'package:google_fonts/google_fonts.dart';
     import 'package:firebase_auth/firebase_auth.dart';
-    import 'package:untitled/widget/auth.dart';
-    import 'package:untitled/pages/cambia_password.dart';
-    import 'package:untitled/pages/notifiche.dart';
+    import 'package:twentyone/widget/auth.dart';
+    import 'package:twentyone/pages/cambia_password.dart';
+    import 'package:twentyone/pages/notifiche.dart';
 
     class Profilo extends StatelessWidget {
       Profilo({super.key});

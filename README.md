@@ -1,147 +1,71 @@
-# TwentyOne — Documentazione dell'applicazione
+# TwentyOne 🔥
 
-## Panoramica
-
-TwentyOne è un'app mobile sviluppata in Flutter, disponibile per Android e iOS, pensata per aiutare l'utente a costruire nuove abitudini attraverso un percorso di 21 giorni. Il nome si ispira alla teoria popolare secondo cui ci vogliono 21 giorni di costanza per formare un'abitudine duratura.
-
-L'app permette di organizzare la giornata tramite note/eventi, tracciare la propria streak giornaliera, ricevere frasi motivazionali e visualizzare un calendario personale.
+**TwentyOne** è un'app mobile cross-platform (Android & iOS) realizzata in **Flutter**, pensata per aiutarti a costruire nuove abitudini sfruttando la celebre "regola dei 21 giorni". L'app ti accompagna giorno per giorno con streak, agenda personale, citazioni motivazionali e notifiche, per non perdere la costanza nel tuo percorso.
 
 ---
 
-## Tecnologie utilizzate
+## ✨ Funzionalità principali
 
-- **Flutter** — framework cross-platform per Android e iOS
-- **Firebase Authentication** — gestione login, registrazione e autenticazione utente
-- **Cloud Firestore** — database cloud per il salvataggio delle note
-- **Firebase Core** — inizializzazione dei servizi Firebase
-- **flutter_local_notifications** — notifiche locali schedulate
-- **shared_preferences** — salvataggio locale di preferenze e streak
-- **timezone** — gestione fuso orario (Europe/Rome) per le notifiche
-- **google_fonts** — tipografia (Playfair Display)
-- **table_calendar** — widget calendario interattivo
-
----
-
-## Struttura della navigazione
-
-L'app è strutturata attorno a una bottom navigation bar personalizzata (`MyBottomBar`) con quattro sezioni principali:
-
-| Tab | Schermata | Descrizione |
-|-----|-----------|-------------|
-| Home | `Home` | Dashboard principale con streak, obiettivo, citazione del giorno e note del giorno |
-| Note | `Note` | Gestione delle note/eventi personali |
-| Profilo | `WidgetTree` | Autenticazione e profilo utente |
-| Ispirati | `Inspo` | Sezione dedicata all'ispirazione |
+- **Autenticazione utente** tramite Firebase Authentication (registrazione, login, verifica email, cambio password)
+- **Streak giornaliera**: traccia per quanti giorni consecutivi apri e usi l'app
+- **Percorso di 21 giorni**: conto alla rovescia calcolato dalla data di creazione dell'account
+- **Agenda del giorno**: gestione di note/eventi personali divisi in Mattina, Pomeriggio e Sera, sincronizzati in tempo reale su Cloud Firestore
+- **Citazione motivazionale del giorno**: una frase diversa ogni giorno, scelta da una raccolta di circa 100 citazioni
+- **Notifiche locali**:
+    - Reminder 15 minuti prima di ogni evento in agenda
+    - Notifiche motivazionali casuali durante la giornata
+    - Preferenze attivabili/disattivabili dall'utente
+- **Calendario mensile interattivo** per la navigazione tra i giorni
+- **Profilo utente** con dati account, stato verifica email e logout
 
 ---
 
-## Schermate principali
+## 🛠️ Stack tecnologico
 
-### Home (`Home.dart`)
-
-La schermata principale mostra una panoramica della giornata dell'utente.
-
-**Contenuti visualizzati:**
-
-- **Card Streak** — mostra il numero di giorni consecutivi in cui l'utente ha aperto l'app. La streak viene calcolata confrontando la data odierna con l'ultima data di accesso salvata in `SharedPreferences`. Viene incrementata di 1 se l'accesso è avvenuto il giorno precedente, azzerata a 1 se è passato più di un giorno.
-
-- **Card Obiettivo 21 giorni** — mostra i giorni rimanenti al completamento del percorso di 21 giorni. Il calcolo si basa sulla data di creazione dell'account Firebase (`user.metadata.creationTime`).
-
-- **Citazione del giorno** — una frase motivazionale selezionata in modo deterministico in base al giorno dell'anno (stessa frase per tutto il giorno, cambia ogni giorno).
-
-- **Agenda del giorno** — le note dell'utente vengono recuperate in tempo reale da Firestore e suddivise in tre fasce orarie:
-    - **Mattina** — eventi con orario di inizio tra le 06:00 e le 11:59
-    - **Pomeriggio** — eventi tra le 12:00 e le 17:59
-    - **Sera** — eventi dalle 18:00 in poi
-
-  Ogni nota mostra l'orario di inizio, il testo e l'orario di fine.
+| Tecnologia | Utilizzo |
+|---|---|
+| [Flutter](https://flutter.dev) | Framework UI cross-platform (Android/iOS) |
+| [Firebase Authentication](https://firebase.google.com/products/auth) | Login e registrazione utenti |
+| [Cloud Firestore](https://firebase.google.com/products/firestore) | Database cloud per le note |
+| [Firebase Core](https://firebase.google.com/docs/flutter/setup) | Inizializzazione servizi Firebase |
+| [flutter_local_notifications](https://pub.dev/packages/flutter_local_notifications) | Notifiche locali schedulate |
+| [shared_preferences](https://pub.dev/packages/shared_preferences) | Persistenza locale di streak e preferenze |
+| [timezone](https://pub.dev/packages/timezone) | Gestione fuso orario `Europe/Rome` |
+| [google_fonts](https://pub.dev/packages/google_fonts) | Tipografia (Playfair Display) |
+| [table_calendar](https://pub.dev/packages/table_calendar) | Widget calendario interattivo |
+| [flutter_launcher_icons](https://pub.dev/packages/flutter_launcher_icons) | Generazione icona app |
 
 ---
 
-### Profilo (`Profilo.dart`)
+## 📂 Struttura del progetto
 
-Schermata di gestione dell'account utente.
-
-**Sezione Account:**
-- Email dell'utente
-- Stato di verifica email (Sì / No)
-- Data di registrazione
-
-**Sezione Impostazioni:**
-- **Cambia password** — naviga alla schermata `CambioPassword`
-- **Notifiche** — naviga alla schermata `Notifiche` per gestire le preferenze
-- **Informazioni sull'app** — mostra un dialog con versione (1.0.0) e descrizione dell'app
-
-**Logout** — pulsante con conferma tramite dialog. Alla conferma viene eseguito il logout da Firebase Authentication.
-
-L'avatar utente mostra le iniziali del nome (massimo 2 lettere) su sfondo blu.
-
----
-
-### Calendario (`Calendario.dart`)
-
-Schermata accessibile dall'icona calendario nella AppBar della Home. Mostra un calendario mensile interattivo tramite il widget `TableCalendar`.
-
-**Caratteristiche:**
-- Navigazione tra i mesi con frecce
-- Evidenziazione del giorno corrente
-- Prima settimana dal lunedì
-- Stile personalizzato coerente con il design dell'app
+```
+lib/
+├── main.dart                  # Entry point, init Firebase e notifiche
+├── pages/
+│   ├── home.dart               # Dashboard: streak, obiettivo, agenda, citazione
+│   ├── note.dart                # Gestione note/eventi
+│   ├── calendario.dart          # Calendario mensile
+│   ├── profilo.dart             # Profilo utente e impostazioni
+│   ├── notifiche.dart           # Preferenze notifiche
+│   ├── login_register.dart      # Login e registrazione
+│   ├── cambia_password.dart     # Cambio password
+│   ├── checkin.dart              # Check-in giornaliero
+│   ├── completamento.dart        # Completamento percorso 21 giorni
+│   ├── non_iscritto.dart          # Schermata utente non autenticato
+│   └── inspo.dart                 # Sezione ispirazione
+└── widget/
+    ├── MyBottomBar.dart          # Bottom navigation bar
+    ├── auth.dart                  # Wrapper Firebase Authentication
+    ├── widget_tree.dart            # Routing in base allo stato auth
+    ├── crea_nota.dart               # Creazione/editing nota
+    ├── servizio_notifiche.dart       # Servizio notifiche locali (singleton)
+    └── quotes_data.dart               # Raccolta citazioni motivazionali
+```
 
 ---
 
-## Autenticazione (`Auth.dart` e `WidgetTree`)
-
-La classe `Auth` è un wrapper attorno a `FirebaseAuth` che espone:
-
-- `currentUser` — utente attualmente autenticato
-- `authStateChanges` — stream per ascoltare i cambiamenti di stato dell'autenticazione
-- `isEmailVerified` — verifica se l'email è confermata
-- `signInWithEmailAndPassword` — login con email e password
-- `createUserWithEmailAndPassword` — registrazione nuovo utente
-- `reloadUser` — aggiorna i dati dell'utente da Firebase
-- `signOut` — logout
-
-Il `WidgetTree` gestisce il routing automatico: se l'utente è autenticato mostra il profilo, altrimenti mostra la schermata di login/registrazione.
-
----
-
-## Notifiche (`servizio_notifiche.dart`)
-
-Il servizio notifiche è implementato come singleton (`NotificationService`) e gestisce due tipologie di notifiche locali.
-
-### Notifiche eventi
-Schedulate automaticamente all'avvio dell'app (solo se l'utente è autenticato). Per ogni nota salvata su Firestore che ha un campo `inizio` (orario in formato `HH:mm`), viene programmata una notifica **15 minuti prima** dell'evento. Le notifiche vengono riprogrammate ogni giorno alla stessa ora.
-
-### Notifiche motivazionali
-Una notifica con una frase motivazionale casuale, schedulata con un ritardo casuale tra 4 e 10 ore dall'avvio dell'app.
-
-### Preferenze notifiche
-L'utente può attivare/disattivare separatamente le notifiche eventi e quelle motivazionali dalla schermata `Notifiche`. Le preferenze vengono salvate in `SharedPreferences`.
-
-### Fuso orario
-Tutte le notifiche usano il fuso orario `Europe/Rome`.
-
----
-
-## Frasi motivazionali (`quotes_data.dart`)
-
-Il file contiene una collezione di circa 100 citazioni suddivise per categoria:
-
-- **Disciplina** — citazioni sulla costanza e il lavoro quotidiano
-- **Abitudini** — citazioni sulla formazione di abitudini positive
-- **Mindset** — citazioni sulla mentalità e la crescita personale
-- **Cambiamento** — citazioni sulla trasformazione personale
-- **Coraggio** — citazioni sull'iniziare e perseverare
-- **Gratitudine** — citazioni sul riconoscere il valore di ciò che si ha
-
-La funzione `getQuoteOfDay()` seleziona deterministicamente una citazione basandosi sul giorno dell'anno, garantendo che la stessa frase venga mostrata per tutta la giornata e cambi il giorno successivo.
-
----
-
-## Database Firestore
-
-La struttura del database è la seguente:
+## 🗄️ Struttura del database Firestore
 
 ```
 utenti/
@@ -153,29 +77,75 @@ utenti/
         testo: "descrizione dell'evento"
 ```
 
-Ogni utente ha la propria collezione di note identificata dal suo `uid` Firebase.
+Ogni utente possiede la propria collezione di note, identificata dal suo `uid` Firebase.
 
 ---
 
-## Avvio dell'app (`main.dart`)
+## 🚀 Getting started
 
-Al lancio dell'app vengono eseguite in sequenza le seguenti operazioni:
+### Prerequisiti
 
-1. Inizializzazione dei binding Flutter
-2. Inizializzazione di Firebase con le opzioni della piattaforma corrente (`DefaultFirebaseOptions.currentPlatform`)
-3. Inizializzazione del servizio notifiche (timezone, plugin)
-4. Richiesta permessi notifiche all'utente
-5. Avvio dell'app (`runApp`)
-6. Dopo il login, scheduling delle notifiche eventi e motivazionali
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (canale compatibile con `sdk: ^3.11.0-207.0.dev`, vedi `pubspec.yaml`)
+- Un progetto [Firebase](https://console.firebase.google.com/) con Authentication (Email/Password) e Cloud Firestore attivati
+- Android Studio / Xcode per build e debug sui rispettivi emulatori/dispositivi
 
-Tutto è wrappato in `runZonedGuarded` per intercettare eventuali errori runtime non gestiti.
+### Installazione
+
+```bash
+# Clona il repository
+git clone https://github.com/ERciabbatta/TwentyOne.git
+cd TwentyOne
+
+# Installa le dipendenze
+flutter pub get
+```
+
+### Configurazione Firebase
+
+1. Crea un progetto su [Firebase Console](https://console.firebase.google.com/)
+2. Abilita **Authentication** (provider Email/Password) e **Cloud Firestore**
+3. Genera il file `lib/widget/firebase_options.dart` con [FlutterFire CLI](https://firebase.google.com/docs/flutter/setup):
+   ```bash
+   dart pub global activate flutterfire_cli
+   flutterfire configure
+   ```
+4. Per iOS, assicurati di avere `GoogleService-Info.plist` correttamente collegato al target `Runner`
+
+### Esecuzione
+
+```bash
+# Avvia l'app su un dispositivo/emulatore connesso
+flutter run
+```
+
+### Build
+
+```bash
+# Android
+flutter build apk --release
+
+# iOS
+flutter build ios --release
+```
 
 ---
 
-## Informazioni sull'app
+## 📱 Navigazione dell'app
+
+L'app utilizza una bottom navigation bar (`MyBottomBar`) con quattro sezioni principali:
+
+| Tab | Schermata | Descrizione |
+|---|---|---|
+| 🏠 Home | `Home` | Streak, obiettivo, citazione del giorno e agenda |
+| 📝 Note | `Note` | Gestione note ed eventi personali |
+| 👤 Profilo | `WidgetTree` | Autenticazione e profilo utente |
+| ✨ Ispirati | `Inspo` | Sezione dedicata all'ispirazione |
+
+---
+
+## ℹ️ Informazioni
 
 - **Nome:** TwentyOne
 - **Versione:** 1.0.0
-- **Sviluppatore:** Massimo Minni
-- **Anno:** 2026
 - **Piattaforme:** Android, iOS
+- **Autore:** Massimo Minni
