@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'dart:math';
 
 class Completamento extends StatefulWidget {
   const Completamento({super.key});
@@ -10,284 +11,561 @@ class Completamento extends StatefulWidget {
   State<Completamento> createState() => _CompletamentoState();
 }
 
-class _CompletamentoState extends State<Completamento> {
-  bool _caricamento = true;
-  int _giorniCompletati = 0;
+class _CompletamentoState extends State<Completamento>
+    with TickerProviderStateMixin {
+  late AnimationController _scaleController;
+  late AnimationController _fadeController;
+  late AnimationController _confettiController;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
+
+  final List<_ConfettiParticle> _particles = [];
+  final Random _random = Random();
+
+  bool _loading = true;
   double _moodMedio = 0;
-  int _streakMassima = 0;
+  double _routinePercent = 0;
+  int _giornoMigliore = 0;
+  int _checkInTotali = 0;
+
+  final List<String> _emoji = ['😞', '😕', '😐', '🙂', '😄'];
+  final List<String> _emojiLabel = ['Male', 'Così così', 'Neutro', 'Bene', 'Ottimo'];
 
   @override
   void initState() {
     super.initState();
+
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _confettiController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.elasticOut,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeIn,
+    );
+
+    for (int i = 0; i < 60; i++) {
+      _particles.add(_ConfettiParticle(random: _random));
+    }
+
     _caricaStatistiche();
   }
 
   Future<void> _caricaStatistiche() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) {
-      setState(() => _caricamento = false);
+      setState(() => _loading = false);
       return;
     }
 
-    try {
-      final checkinSnap = await FirebaseFirestore.instance
-          .collection('utenti')
-          .doc(uid)
-          .collection('checkin')
-          .get();
+    final snapshot = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .collection('checkin')
+        .get();
 
-      final checkins = checkinSnap.docs;
-      final giorni = checkins.length;
+    final docs = snapshot.docs;
 
-      double moodTotale = 0;
-      for (final doc in checkins) {
-        final mood = doc.data()['mood'] as int? ?? 2;
-        moodTotale += mood;
-      }
-      final moodMedio = giorni > 0 ? moodTotale / giorni : 0.0;
-
-      final utenteSnap = await FirebaseFirestore.instance
-          .collection('utenti')
-          .doc(uid)
-          .get();
-      final streak = utenteSnap.data()?['streak'] as int? ?? 0;
-
-      setState(() {
-        _giorniCompletati = giorni;
-        _moodMedio = moodMedio;
-        _streakMassima = streak;
-        _caricamento = false;
-      });
-    } catch (_) {
-      setState(() => _caricamento = false);
+    if (docs.isEmpty) {
+      setState(() => _loading = false);
+      _avviaAnimazioni();
+      return;
     }
+
+    int totaleMood = 0;
+    int routineSi = 0;
+    int moodMax = 0;
+
+    for (final doc in docs) {
+      final data = doc.data();
+      final mood = data['mood'] as int? ?? 0;
+      final routine = data['routine'] as int? ?? 2;
+
+      totaleMood += mood;
+      if (routine == 0) routineSi++;
+      if (mood > moodMax) moodMax = mood;
+    }
+
+    setState(() {
+      _checkInTotali = docs.length;
+      _moodMedio = totaleMood / docs.length;
+      _routinePercent = (routineSi / docs.length) * 100;
+      _giornoMigliore = moodMax;
+      _loading = false;
+    });
+
+    _avviaAnimazioni();
   }
 
-  Future<void> _iniziaNuovoCiclo() async {
-    final uid = Auth().currentUser?.uid;
-    if (uid == null) return;
-
-    final oggi = DateTime.now();
-    final oggiStr =
-        '${oggi.year}-${oggi.month.toString().padLeft(2, '0')}-${oggi.day.toString().padLeft(2, '0')}';
-
-    await FirebaseFirestore.instance.collection('utenti').doc(uid).set(
-      {'dataInizio': oggiStr, 'streak': 0, 'lastActiveDate': null},
-      SetOptions(merge: true),
-    );
-
-    if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+  void _avviaAnimazioni() {
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      _scaleController.forward();
+      _fadeController.forward();
+      _confettiController.repeat();
+    });
   }
 
-  String _moodLabel(double media) {
-    if (media < 1) return 'Difficile';
-    if (media < 2) return 'Così così';
-    if (media < 3) return 'Neutro';
-    if (media < 4) return 'Bene';
-    return 'Ottimo';
-  }
-
-  String _moodEmoji(double media) {
-    if (media < 1) return '😞';
-    if (media < 2) return '😕';
-    if (media < 3) return '😐';
-    if (media < 4) return '🙂';
-    return '😄';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: _caricamento
-            ? const Center(
-          child: CircularProgressIndicator(color: Color(0xFF7A9CC6)),
-        )
-            : SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 48),
-              Container(
-                width: 100,
-                height: 100,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFF8E1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.emoji_events_rounded,
-                    color: Color(0xFFFFB74D), size: 54),
+  Future<void> _mostraDialogReset() async {
+    final conferma = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(height: 28),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                'Hai completato\ni 21 giorni!',
-                textAlign: TextAlign.center,
+                'Ricominciare il percorso?',
                 style: GoogleFonts.playfairDisplay(
-                  fontSize: 30,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF3A4A5C),
-                  height: 1.2,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               const Text(
-                'Hai costruito una nuova abitudine.\nEcco il riepilogo del tuo ciclo.',
-                textAlign: TextAlign.center,
+                'Tutti i progressi, i check-in e lo streak verranno azzerati. Sei sicuro?',
                 style: TextStyle(
                   color: Color(0xFF8A9BB5),
                   fontSize: 14,
-                  height: 1.6,
+                  height: 1.5,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 24),
               Row(
                 children: [
-                  _buildStatCard(
-                    Icons.calendar_today_rounded,
-                    '$_giorniCompletati',
-                    'Check-in fatti',
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8EEF7),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Annulla',
+                            style: TextStyle(
+                              color: Color(0xFF3A4A5C),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  _buildStatCard(
-                    Icons.local_fire_department_rounded,
-                    '$_streakMassima',
-                    'Streak attuale',
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(ctx, true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE8E8),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Reimposta',
+                            style: TextStyle(
+                              color: Color(0xFFE57373),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    vertical: 24, horizontal: 20),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8EEF7),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _moodEmoji(_moodMedio),
-                      style: const TextStyle(fontSize: 36),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Mood medio',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            letterSpacing: 1.2,
-                            color: Color(0xFF8A9BB5),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _moodLabel(_moodMedio),
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF3A4A5C),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 48),
-              GestureDetector(
-                onTap: _iniziaNuovoCiclo,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF7A9CC6),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Inizia un nuovo ciclo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Continua a usare l\'app',
-                      style: TextStyle(
-                        color: Color(0xFF3A4A5C),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 40),
             ],
           ),
         ),
       ),
     );
+
+    if (conferma != true) return;
+
+    final uid = Auth().currentUser?.uid;
+    if (uid == null) return;
+
+    final utentiRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
+
+    await utentiRef.set({
+      'dataInizio': DateTime.now().toIso8601String().substring(0, 10),
+      'streak': 0,
+      'lastActiveDate': null,
+    }, SetOptions(merge: true));
+
+    final checkin = await utentiRef.collection('checkin').get();
+    for (final doc in checkin.docs) {
+      await doc.reference.delete();
+    }
+
+    if (mounted) Navigator.of(context).pop();
   }
 
-  Widget _buildStatCard(IconData icon, String valore, String label) {
+  @override
+  void dispose() {
+    _scaleController.dispose();
+    _fadeController.dispose();
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  String get _moodEmoji => _emoji[_moodMedio.round().clamp(0, 4)];
+  String get _moodLabel => _emojiLabel[_moodMedio.round().clamp(0, 4)];
+
+  Widget _buildStatCard(String titolo, String valore, String sottotitolo, {Widget? custom}) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
           color: const Color(0xFFE8EEF7),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFD0DCF0),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: const Color(0xFF7A9CC6), size: 22),
-            ),
-            const SizedBox(height: 12),
             Text(
+              titolo,
+              style: const TextStyle(
+                fontSize: 10,
+                letterSpacing: 1.2,
+                color: Color(0xFF8A9BB5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            custom ?? Text(
               valore,
               style: GoogleFonts.playfairDisplay(
-                fontSize: 40,
+                fontSize: 32,
                 fontWeight: FontWeight.w400,
                 color: const Color(0xFF3A4A5C),
               ),
             ),
             const SizedBox(height: 4),
             Text(
-              label,
+              sottotitolo,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF8A9BB5)),
+              style: const TextStyle(fontSize: 11, color: Color(0xFF8A9BB5)),
             ),
           ],
         ),
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          AnimatedBuilder(
+            animation: _confettiController,
+            builder: (context, child) {
+              return CustomPaint(
+                painter: _ConfettiPainter(
+                  particles: _particles,
+                  progress: _confettiController.value,
+                ),
+                size: Size.infinite,
+              );
+            },
+          ),
+          if (_loading)
+            const Center(child: CircularProgressIndicator(color: Color(0xFF7A9CC6)))
+          else
+            SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 32),
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE8EEF7),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF6B8CAE).withOpacity(0.3),
+                                blurRadius: 30,
+                                spreadRadius: 5,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.emoji_events_rounded,
+                            size: 52,
+                            color: Color(0xFF4A7BA7),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Text(
+                        'Ce l\'hai fatta!',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Hai completato il tuo percorso di 21 giorni.\nHai costruito qualcosa di straordinario.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF7F8C8D),
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF7A9CC6), Color(0xFF5B7FA8)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              '21',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 56,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'giorni',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Text(
+                                  'di costanza',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_checkInTotali > 0) ...[
+                        const SizedBox(height: 24),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'I tuoi 21 giorni in numeri',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF3A4A5C),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            _buildStatCard(
+                              'MOOD MEDIO',
+                              '',
+                              _moodLabel,
+                              custom: Text(
+                                _moodEmoji,
+                                style: const TextStyle(fontSize: 34),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _buildStatCard(
+                              'ROUTINE SEGUITA',
+                              '${_routinePercent.round()}%',
+                              'dei giorni',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _buildStatCard(
+                              'CHECK-IN TOTALI',
+                              '$_checkInTotali',
+                              'su 21 giorni',
+                            ),
+                            const SizedBox(width: 12),
+                            _buildStatCard(
+                              'GIORNO MIGLIORE',
+                              '',
+                              _emojiLabel[_giornoMigliore.clamp(0, 4)],
+                              custom: Text(
+                                _emoji[_giornoMigliore.clamp(0, 4)],
+                                style: const TextStyle(fontSize: 34),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            backgroundColor: const Color(0xFF4A7BA7),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            'Continua',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 16,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: _mostraDialogReset,
+                          style: TextButton.styleFrom(
+                            backgroundColor: const Color(0xFFE8EEF7),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            'Ricomincia il percorso',
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 16,
+                              color: const Color(0xFF8A9BB5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConfettiParticle {
+  late double x;
+  late double y;
+  late double size;
+  late double speed;
+  late double wobble;
+  late Color color;
+  late double rotation;
+
+  _ConfettiParticle({required Random random}) {
+    x = random.nextDouble();
+    y = random.nextDouble() * -1;
+    size = random.nextDouble() * 8 + 4;
+    speed = random.nextDouble() * 0.3 + 0.1;
+    wobble = random.nextDouble() * 0.05;
+    rotation = random.nextDouble() * 2 * pi;
+    const colors = [
+      Color(0xFF4A7BA7),
+      Color(0xFFE8EEF7),
+      Color(0xFF2C3E50),
+      Color(0xFF85C1E9),
+      Color(0xFFF8C471),
+      Color(0xFF82E0AA),
+    ];
+    color = colors[random.nextInt(colors.length)];
+  }
+}
+
+class _ConfettiPainter extends CustomPainter {
+  final List<_ConfettiParticle> particles;
+  final double progress;
+
+  _ConfettiPainter({required this.particles, required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final p in particles) {
+      final paint = Paint()..color = p.color.withOpacity(0.8);
+      final x = (p.x + sin(progress * 2 * pi * p.wobble * 10)) * size.width;
+      final y = (p.y + progress * p.speed * 3) % 1.2 * size.height;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(p.rotation + progress * 3);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size * 0.5),
+          const Radius.circular(2),
+        ),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter oldDelegate) => true;
 }
