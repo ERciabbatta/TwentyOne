@@ -81,55 +81,6 @@ Ogni utente possiede la propria collezione di note, identificata dal suo `uid` F
 
 ---
 
-## 🚀 Getting started
-
-### Prerequisiti
-
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) (canale compatibile con `sdk: ^3.11.0-207.0.dev`, vedi `pubspec.yaml`)
-- Un progetto [Firebase](https://console.firebase.google.com/) con Authentication (Email/Password) e Cloud Firestore attivati
-- Android Studio / Xcode per build e debug sui rispettivi emulatori/dispositivi
-
-### Installazione
-
-```bash
-# Clona il repository
-git clone https://github.com/ERciabbatta/TwentyOne.git
-cd TwentyOne
-
-# Installa le dipendenze
-flutter pub get
-```
-
-### Configurazione Firebase
-
-1. Crea un progetto su [Firebase Console](https://console.firebase.google.com/)
-2. Abilita **Authentication** (provider Email/Password) e **Cloud Firestore**
-3. Genera il file `lib/widget/firebase_options.dart` con [FlutterFire CLI](https://firebase.google.com/docs/flutter/setup):
-   ```bash
-   dart pub global activate flutterfire_cli
-   flutterfire configure
-   ```
-4. Per iOS, assicurati di avere `GoogleService-Info.plist` correttamente collegato al target `Runner`
-
-### Esecuzione
-
-```bash
-# Avvia l'app su un dispositivo/emulatore connesso
-flutter run
-```
-
-### Build
-
-```bash
-# Android
-flutter build apk --release
-
-# iOS
-flutter build ios --release
-```
-
----
-
 ## 📱 Navigazione dell'app
 
 L'app utilizza una bottom navigation bar (`MyBottomBar`) con quattro sezioni principali:
@@ -149,3 +100,14 @@ L'app utilizza una bottom navigation bar (`MyBottomBar`) con quattro sezioni pri
 - **Versione:** 1.0.0
 - **Piattaforme:** Android, iOS
 - **Autore:** Massimo Minni
+
+
+```
+ __  __                   _                   
+|  \/  |  __ _  ___  ___ (_) _ __ ___    ___  
+| |\/| | / _` |/ __|/ __|| || '_ ` _ \  / _ \
+| |  | || (_| |\__ \\__ \| || | | | | || (_) |
+|_|  |_| \__,_||___/|___/|_||_| |_| |_| \___/ 
+```
+
+
