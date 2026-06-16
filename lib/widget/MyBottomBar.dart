@@ -1,7 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:oc_liquid_glass/oc_liquid_glass.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import 'package:twentyone/pages/home.dart';
 import 'package:twentyone/pages/note.dart';
 import 'package:twentyone/pages/inspo.dart';
@@ -15,107 +14,42 @@ class MyBottomBar extends StatefulWidget {
 }
 
 class _MyBottomBarState extends State<MyBottomBar> {
-  final List<Widget> pages = [
+  final List<Widget> _pages = [
     Home(),
     Note(),
     WidgetTree(),
     Inspo(),
   ];
 
-  int currentPage = 0;
-  final GlobalKey _barKey = GlobalKey();
+  int _currentPage = 0;
 
-  void _handleBarDrag(Offset localPosition) {
-    final RenderBox? box =
-    _barKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return;
-
-    final width = box.size.width;
-    final x = localPosition.dx.clamp(0.0, width);
-    final index = (x / width * 4).floor().clamp(0, 3);
-
-    if (index != currentPage) {
-      setState(() => currentPage = index);
-      HapticFeedback.selectionClick();
-    }
+  void _onTap(int index) {
+    setState(() => _currentPage = index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: Platform.isIOS,
-      body: IndexedStack(
-        index: currentPage,
-        children: pages,
-      ),
-      bottomNavigationBar: Platform.isIOS
-          ? _buildLiquidGlassBar()
-          : _buildClassicBar(),
-    );
-  }
-
-  Widget _buildLiquidGlassBar() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
-        child: GestureDetector(
-          onPanStart: (d) => _handleBarDrag(d.localPosition),
-          onPanUpdate: (d) => _handleBarDrag(d.localPosition),
-          child: OCLiquidGlassGroup(
-            key: _barKey,
-            settings: const OCLiquidGlassSettings(
-              refractStrength: -0.04,
-              blurRadiusPx: 40.0,
-              specStrength: 8.0,
-              lightbandColor: Colors.white,
-              lightbandStrength: 0.15,
-            ),
-            child: OCLiquidGlass(
-              height: 76,
-              borderRadius: 22,
-              color: Colors.white.withOpacity(0.08),
-              shadow: BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _NavItem(
-                    icon: Icons.home_filled,
-                    label: 'Home',
-                    selected: currentPage == 0,
-                    onTap: () => setState(() => currentPage = 0),
-                  ),
-                  _NavItem(
-                    icon: Icons.note_rounded,
-                    label: 'Note',
-                    selected: currentPage == 1,
-                    onTap: () => setState(() => currentPage = 1),
-                  ),
-                  _NavItem(
-                    icon: Icons.person_outline_rounded,
-                    label: 'Profilo',
-                    selected: currentPage == 2,
-                    onTap: () => setState(() => currentPage = 2),
-                  ),
-                  _NavItem(
-                    icon: Icons.rocket_launch_outlined,
-                    label: 'Ispirati',
-                    selected: currentPage == 3,
-                    onTap: () => setState(() => currentPage = 3),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+      body: _pages[_currentPage],
+      bottomNavigationBar: _BottomBar(
+        currentIndex: _currentPage,
+        onTap: _onTap,
       ),
     );
   }
+}
 
-  Widget _buildClassicBar() {
+class _BottomBar extends StatelessWidget {
+  final int currentIndex;
+  final ValueChanged<int> onTap;
+
+  const _BottomBar({
+    required this.currentIndex,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -136,26 +70,26 @@ class _MyBottomBarState extends State<MyBottomBar> {
               _NavItem(
                 icon: Icons.home_filled,
                 label: 'Home',
-                selected: currentPage == 0,
-                onTap: () => setState(() => currentPage = 0),
+                selected: currentIndex == 0,
+                onTap: () => onTap(0),
               ),
               _NavItem(
                 icon: Icons.note_rounded,
                 label: 'Note',
-                selected: currentPage == 1,
-                onTap: () => setState(() => currentPage = 1),
+                selected: currentIndex == 1,
+                onTap: () => onTap(1),
               ),
               _NavItem(
                 icon: Icons.person_outline_rounded,
                 label: 'Profilo',
-                selected: currentPage == 2,
-                onTap: () => setState(() => currentPage = 2),
+                selected: currentIndex == 2,
+                onTap: () => onTap(2),
               ),
               _NavItem(
                 icon: Icons.rocket_launch_outlined,
                 label: 'Ispirati',
-                selected: currentPage == 3,
-                onTap: () => setState(() => currentPage = 3),
+                selected: currentIndex == 3,
+                onTap: () => onTap(3),
               ),
             ],
           ),
@@ -180,49 +114,36 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isIOS = Platform.isIOS;
-
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE8EEF7) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
           children: [
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                icon,
-                key: ValueKey(selected),
-                size: 24,
-                color: selected
-                    ? (isIOS
-                    ? const Color(0xFF0A84FF)
-                    : const Color(0xFF7A9CC6))
-                    : (isIOS
-                    ? Colors.white.withOpacity(0.45)
-                    : const Color(0xFF8A9BB5)),
-              ),
+            Icon(
+              icon,
+              size: 20,
+              color: selected
+                  ? const Color(0xFF7A9CC6)
+                  : const Color(0xFF8A9BB5),
             ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight:
-                selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected
-                    ? (isIOS
-                    ? const Color(0xFF0A84FF)
-                    : const Color(0xFF3A4A5C))
-                    : (isIOS
-                    ? Colors.white.withOpacity(0.45)
-                    : const Color(0xFF8A9BB5)),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF3A4A5C),
+                ),
               ),
-              child: Text(label),
-            ),
+            ],
           ],
         ),
       ),
