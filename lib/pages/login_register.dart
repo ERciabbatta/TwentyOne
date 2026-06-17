@@ -4,19 +4,26 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 
 class LoginRegister extends StatefulWidget {
-  const LoginRegister({super.key});
+  final bool startAsLogin;
+  const LoginRegister({super.key, this.startAsLogin = true});
 
   @override
   State<LoginRegister> createState() => _LoginRegisterState();
 }
 
 class _LoginRegisterState extends State<LoginRegister> {
+  late bool isLogin;
   String? errorMessage = '';
-  bool isLogin = true;
 
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    isLogin = widget.startAsLogin;
+  }
 
   Future<void> signInWithEmailAndPassword() async {
     try {
@@ -91,9 +98,7 @@ class _LoginRegisterState extends State<LoginRegister> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               const SizedBox(height: 60),
-
               Text(
                 isLogin ? 'Bentornato.' : 'Crea account.',
                 style: GoogleFonts.playfairDisplay(
@@ -104,17 +109,13 @@ class _LoginRegisterState extends State<LoginRegister> {
               ),
               const SizedBox(height: 8),
               Text(
-                isLogin
-                    ? 'Accedi per continuare'
-                    : 'Registrati per iniziare',
+                isLogin ? 'Accedi per continuare' : 'Registrati per iniziare',
                 style: const TextStyle(
                   color: Color(0xFF8A9BB5),
                   fontSize: 15,
                 ),
               ),
-
               const SizedBox(height: 40),
-
               if (!isLogin) ...[
                 _inputField(
                   label: 'Nome',
@@ -123,7 +124,6 @@ class _LoginRegisterState extends State<LoginRegister> {
                 ),
                 const SizedBox(height: 12),
               ],
-
               _inputField(
                 label: 'Email',
                 icon: Icons.email_outlined,
@@ -136,13 +136,11 @@ class _LoginRegisterState extends State<LoginRegister> {
                 controller: _controllerPassword,
                 obscure: true,
               ),
-
               if (errorMessage != null && errorMessage!.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFE8E8),
                     borderRadius: BorderRadius.circular(14),
@@ -156,9 +154,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 28),
-
               GestureDetector(
                 onTap: isLogin
                     ? signInWithEmailAndPassword
@@ -189,9 +185,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
               Center(
                 child: GestureDetector(
                   onTap: () {
@@ -212,7 +206,6 @@ class _LoginRegisterState extends State<LoginRegister> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 40),
             ],
           ),

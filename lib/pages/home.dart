@@ -23,7 +23,7 @@ class _HomeState extends State<Home> {
   int _giorniRimanenti = 21;
   bool _cicloCompletato = false;
   bool _mostraBottoneCheckin = false;
-  String _obiettivo = ''; // ← nuovo
+  String _obiettivo = '';
 
   static const _keyCheckinDate = 'checkin_date';
 

@@ -5,10 +5,10 @@ import 'package:twentyone/pages/login_register.dart';
 class NonIscritto extends StatelessWidget {
   const NonIscritto({super.key});
 
-  void _navigaConDissolvenza(BuildContext context) {
+  void _navigaConDissolvenza(BuildContext context, {required bool startAsLogin}) {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-      const LoginRegister(),
+          LoginRegister(startAsLogin: startAsLogin),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return FadeTransition(opacity: animation, child: child);
       },
@@ -39,9 +39,7 @@ class NonIscritto extends StatelessWidget {
                   size: 36,
                 ),
               ),
-
               const SizedBox(height: 28),
-
               Text(
                 'TwentyOne',
                 style: GoogleFonts.playfairDisplay(
@@ -50,9 +48,7 @@ class NonIscritto extends StatelessWidget {
                   color: const Color(0xFF3A4A5C),
                 ),
               ),
-
               const SizedBox(height: 12),
-
               const Text(
                 'Inizia il tuo percorso di 21 giorni e trasforma le tue intenzioni in abitudini reali.',
                 textAlign: TextAlign.center,
@@ -62,11 +58,9 @@ class NonIscritto extends StatelessWidget {
                   height: 1.6,
                 ),
               ),
-
               const SizedBox(height: 48),
-
               GestureDetector(
-                onTap: () => _navigaConDissolvenza(context),
+                onTap: () => _navigaConDissolvenza(context, startAsLogin: true),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
@@ -86,11 +80,9 @@ class NonIscritto extends StatelessWidget {
                   ),
                 ),
               ),
-
               const SizedBox(height: 12),
-
               GestureDetector(
-                onTap: () => _navigaConDissolvenza(context),
+                onTap: () => _navigaConDissolvenza(context, startAsLogin: false),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
