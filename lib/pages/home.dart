@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/pages/calendario.dart';
 import 'package:twentyone/pages/completamento.dart';
+import 'package:twentyone/pages/checkin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 
 class Home extends StatefulWidget {
@@ -20,6 +22,10 @@ class _HomeState extends State<Home> {
   int _streakCount = 0;
   int _giorniRimanenti = 21;
   bool _cicloCompletato = false;
+  bool _mostraBottoneCheckin = false;
+  String _obiettivo = ''; // ← nuovo
+
+  static const _keyCheckinDate = 'checkin_date';
 
   @override
   void initState() {
@@ -28,15 +34,41 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _caricaDatiUtente() async {
-    final streak = await checkAndUpdateStreak();
+    final streak    = await checkAndUpdateStreak();
     final rimanenti = await _calcolaGiorniRimanenti();
+    final mostraBtn = await _calcolaBottoneCheckin();
+    // _calcolaGiorniRimanenti già legge il doc utente, ma lo rileggiamo
+    // separatamente per l'obiettivo per non complicare quella funzione
+    final obiettivo = await _caricaObiettivo(); // ← nuovo
     if (mounted) {
       setState(() {
-        _streakCount = streak;
-        _giorniRimanenti = rimanenti;
-        _cicloCompletato = rimanenti == 0;
+        _streakCount          = streak;
+        _giorniRimanenti      = rimanenti;
+        _cicloCompletato      = rimanenti == 0;
+        _mostraBottoneCheckin = mostraBtn;
+        _obiettivo            = obiettivo; // ← nuovo
       });
     }
+  }
+
+  // ← nuovo
+  Future<String> _caricaObiettivo() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return '';
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .get();
+    return doc.data()?['obiettivo'] as String? ?? '';
+  }
+
+  Future<bool> _calcolaBottoneCheckin() async {
+    final ora = DateTime.now().hour;
+    if (ora < 22) return false;
+    final prefs       = await SharedPreferences.getInstance();
+    final lastCheckin = prefs.getString(_keyCheckinDate) ?? '';
+    final oggi        = _dateKey(DateTime.now());
+    return lastCheckin != oggi;
   }
 
   Future<int> _calcolaGiorniRimanenti() async {
@@ -57,32 +89,33 @@ class _HomeState extends State<Home> {
       final creazione = user.metadata.creationTime;
       if (creazione == null) return 21;
       dataInizio = DateTime(creazione.year, creazione.month, creazione.day);
-      final oggiStr =
-          '${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-${DateTime.now().day.toString().padLeft(2, '0')}';
       await FirebaseFirestore.instance
           .collection('utenti')
           .doc(user.uid)
-          .set({'dataInizio': '${dataInizio.year}-${dataInizio.month.toString().padLeft(2, '0')}-${dataInizio.day.toString().padLeft(2, '0')}'}, SetOptions(merge: true));
+          .set({
+        'dataInizio':
+        '${dataInizio.year}-${dataInizio.month.toString().padLeft(2, '0')}-${dataInizio.day.toString().padLeft(2, '0')}'
+      }, SetOptions(merge: true));
     }
 
-    final oggi = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
-    final inizio = DateTime(dataInizio.year, dataInizio.month, dataInizio.day);
+    final oggi    = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final inizio  = DateTime(dataInizio.year, dataInizio.month, dataInizio.day);
     final passati = oggi.difference(inizio).inDays;
-    final rimanenti = 21 - passati;
-    return rimanenti < 0 ? 0 : rimanenti;
+    final rim     = 21 - passati;
+    return rim < 0 ? 0 : rim;
   }
 
   Future<int> checkAndUpdateStreak() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 0;
 
-    final doc = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
+    final doc      = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
     final snapshot = await doc.get();
-    final data = snapshot.data();
+    final data     = snapshot.data();
 
-    final today = DateTime.now();
-    final todayStr = _dateKey(today);
-    final lastDateStr = data?['lastActiveDate'] as String?;
+    final today         = DateTime.now();
+    final todayStr      = _dateKey(today);
+    final lastDateStr   = data?['lastActiveDate'] as String?;
     final currentStreak = data?['streak'] as int? ?? 0;
 
     if (lastDateStr == null) {
@@ -91,7 +124,7 @@ class _HomeState extends State<Home> {
     }
 
     final lastDate = DateTime.parse(lastDateStr);
-    final diff = _dayDifference(lastDate, today);
+    final diff     = _dayDifference(lastDate, today);
 
     if (diff == 0) return currentStreak;
 
@@ -173,12 +206,38 @@ class _HomeState extends State<Home> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF8A9BB5)),
-            ),
+            Text(label,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF8A9BB5))),
           ],
         ),
+      ),
+    );
+  }
+
+  // ← nuovo
+  Widget _buildObiettivoStrip() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8EEF7),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.flag_rounded, color: Color(0xFF7A9CC6), size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _obiettivo,
+              style: const TextStyle(
+                color: Color(0xFF3A4A5C),
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -189,21 +248,15 @@ class _HomeState extends State<Home> {
       child: Row(
         children: [
           const Text('• ', style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 16)),
-          Text(
-            nota['inizio'] ?? '',
-            style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
-          ),
+          Text(nota['inizio'] ?? '',
+              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
           const SizedBox(width: 6),
           Expanded(
-            child: Text(
-              nota['testo'] ?? '',
-              style: const TextStyle(color: Color(0xFF4A5568), fontSize: 13),
-            ),
+            child: Text(nota['testo'] ?? '',
+                style: const TextStyle(color: Color(0xFF4A5568), fontSize: 13)),
           ),
-          Text(
-            nota['fine'] ?? '',
-            style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
-          ),
+          Text(nota['fine'] ?? '',
+              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
         ],
       ),
     );
@@ -224,20 +277,16 @@ class _HomeState extends State<Home> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      titolo,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF3A4A5C),
-                      ),
-                    ),
+                    Text(titolo,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF3A4A5C),
+                        )),
                     const SizedBox(height: 8),
                     if (note.isEmpty)
-                      const Text(
-                        'Nessuna nota',
-                        style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
-                      )
+                      const Text('Nessuna nota',
+                          style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 13))
                     else
                       ...note.map((nota) => _buildNotaRow(nota)),
                   ],
@@ -287,18 +336,69 @@ class _HomeState extends State<Home> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Tocca per vedere il riepilogo',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                    ),
-                  ),
+                  const Text('Tocca per vedere il riepilogo',
+                      style: TextStyle(color: Colors.white70, fontSize: 13)),
                 ],
               ),
             ),
             const Icon(Icons.arrow_forward_ios_rounded,
                 color: Colors.white70, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBannerCheckin() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CheckIn()),
+        ).then((_) => _caricaDatiUtente());
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE8EEF7),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFB8CCE4), width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                color: Color(0xFFD0DCF0),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.nightlight_round,
+                  color: Color(0xFF7A9CC6), size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Check-in serale',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF3A4A5C),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'Come è andata oggi?',
+                    style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: Color(0xFF8A9BB5), size: 16),
           ],
         ),
       ),
@@ -330,19 +430,19 @@ class _HomeState extends State<Home> {
       body: StreamBuilder<QuerySnapshot>(
         stream: _noteStream(),
         builder: (context, snapshot) {
-          final mattina = <Map<String, dynamic>>[];
+          final mattina    = <Map<String, dynamic>>[];
           final pomeriggio = <Map<String, dynamic>>[];
-          final sera = <Map<String, dynamic>>[];
+          final sera       = <Map<String, dynamic>>[];
 
           if (snapshot.hasData) {
             for (final doc in snapshot.data!.docs) {
-              final nota = doc.data() as Map<String, dynamic>;
+              final nota   = doc.data() as Map<String, dynamic>;
               final giorni = List<int>.from(nota['giorni'] ?? []);
               if (!giorni.contains(_giornoOggi)) continue;
               final fascia = _getFasciaOraria(nota['inizio'] ?? '');
-              if (fascia == 'mattina') mattina.add(nota);
+              if (fascia == 'mattina')         mattina.add(nota);
               else if (fascia == 'pomeriggio') pomeriggio.add(nota);
-              else sera.add(nota);
+              else                             sera.add(nota);
             }
 
             for (final lista in [mattina, pomeriggio, sera]) {
@@ -365,24 +465,33 @@ class _HomeState extends State<Home> {
                   _buildBannerCompletamento(),
                   const SizedBox(height: 16),
                 ],
+
                 Row(
                   children: [
                     _buildObiettivoCard(
                       Icons.local_fire_department_outlined,
-                      'Streak',
-                      '$_streakCount',
-                      'GIORNI',
+                      'Streak', '$_streakCount', 'GIORNI',
                     ),
                     const SizedBox(width: 12),
                     _buildObiettivoCard(
                       Icons.star_border,
-                      'Obiettivo 21 giorni',
-                      '$_giorniRimanenti',
-                      'GIORNI RIMANENTI',
+                      'Obiettivo 21 giorni', '$_giorniRimanenti', 'GIORNI RIMANENTI',
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
+
+                // ← nuovo: strip obiettivo, solo se impostato
+                if (_obiettivo.isNotEmpty) ...[
+                  _buildObiettivoStrip(),
+                  const SizedBox(height: 12),
+                ],
+
+                if (_mostraBottoneCheckin) ...[
+                  _buildBannerCheckin(),
+                  const SizedBox(height: 12),
+                ],
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
@@ -395,10 +504,7 @@ class _HomeState extends State<Home> {
                       const Text(
                         '\u201C',
                         style: TextStyle(
-                          fontSize: 36,
-                          color: Color(0xFF7A9CC6),
-                          height: 0.8,
-                        ),
+                            fontSize: 36, color: Color(0xFF7A9CC6), height: 0.8),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -415,6 +521,7 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 const SizedBox(height: 16),
+
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -433,8 +540,8 @@ class _HomeState extends State<Home> {
                     children: [
                       _buildFasciaOraria(
                           Icons.wb_sunny_outlined, 'Mattina', mattina, true),
-                      _buildFasciaOraria(Icons.wb_twilight_outlined,
-                          'Pomeriggio', pomeriggio, true),
+                      _buildFasciaOraria(
+                          Icons.wb_twilight_outlined, 'Pomeriggio', pomeriggio, true),
                       _buildFasciaOraria(
                           Icons.nightlight_outlined, 'Sera', sera, false),
                     ],

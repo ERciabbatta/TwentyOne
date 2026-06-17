@@ -2,9 +2,9 @@ name: twentyone
 
 description: "TwentyOne - Costruisci nuove abitudini in 21 giorni di costanza."
 
-publish_to:
+publish_to: "none"
 
-version: 1.0.0+1
+version: 1.3.0+1
 
 environment:
   sdk: ^3.11.0-207.0.dev
@@ -23,7 +23,6 @@ dependencies:
   flutter_launcher_icons: ^0.14.4
   flutter_local_notifications: ^21.0.0
   timezone: ^0.11.0
-  oc_liquid_glass: ^0.2.2
 
 dev_dependencies:
   flutter_test:

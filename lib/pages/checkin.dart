@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twentyone/widget/auth.dart';
 
 class CheckIn extends StatefulWidget {
@@ -17,13 +18,22 @@ class _CheckInState extends State<CheckIn> {
   bool _salvato = false;
   bool _giaCompletato = false;
 
+  // ── Nuovi campi per la streak ──────────────────────────────────────────────
+  int _nuovaStreak = 0;   // valorizzato dopo il salvataggio riuscito
+  bool _streakRotta = false; // true se si è interrotta la sequenza
+
+  static const _keyStreak      = 'streak';
+  static const _keyCheckinDate = 'checkin_date'; // 'yyyy-MM-dd'
+  static const _keyBestStreak  = 'best_streak';
+  // ──────────────────────────────────────────────────────────────────────────
+
   final List<Map<String, dynamic>> _opzioniRoutine = [
-    {'label': 'Sì', 'icon': Icons.check_circle_rounded, 'color': Color(0xFF66BB6A)},
-    {'label': 'In parte', 'icon': Icons.remove_circle_rounded, 'color': Color(0xFFFFB74D)},
-    {'label': 'No', 'icon': Icons.cancel_rounded, 'color': Color(0xFFE57373)},
+    {'label': 'Sì',      'icon': Icons.check_circle_rounded,  'color': Color(0xFF66BB6A)},
+    {'label': 'In parte','icon': Icons.remove_circle_rounded, 'color': Color(0xFFFFB74D)},
+    {'label': 'No',      'icon': Icons.cancel_rounded,        'color': Color(0xFFE57373)},
   ];
 
-  final List<String> _emoji = ['😞', '😕', '😐', '🙂', '😄'];
+  final List<String> _emoji      = ['😞', '😕', '😐', '🙂', '😄'];
   final List<String> _emojiLabel = ['Male', 'Così così', 'Neutro', 'Bene', 'Ottimo'];
 
   @override
@@ -31,6 +41,16 @@ class _CheckInState extends State<CheckIn> {
     super.initState();
     _verificaCheckInOggi();
   }
+
+  // ── Helpers data ───────────────────────────────────────────────────────────
+  String _chiaveData(DateTime data) =>
+      '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
+
+  String _ieri() {
+    final yesterday = DateTime.now().subtract(const Duration(days: 1));
+    return _chiaveData(yesterday);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
 
   Future<void> _verificaCheckInOggi() async {
     final uid = Auth().currentUser?.uid;
@@ -49,9 +69,6 @@ class _CheckInState extends State<CheckIn> {
     }
   }
 
-  String _chiaveData(DateTime data) =>
-      '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
-
   Future<void> _salvaCheckIn() async {
     if (_rispostaRoutine == null || _rispostaMood == null) return;
 
@@ -62,19 +79,49 @@ class _CheckInState extends State<CheckIn> {
 
     try {
       final oggi = _chiaveData(DateTime.now());
+
+      // ── 1. Salva su Firestore (invariato) ──────────────────────────────────
       await FirebaseFirestore.instance
           .collection('utenti')
           .doc(uid)
           .collection('checkin')
           .doc(oggi)
           .set({
-        'data': oggi,
+        'data'     : oggi,
         'timestamp': FieldValue.serverTimestamp(),
-        'routine': _rispostaRoutine,
-        'mood': _rispostaMood,
+        'routine'  : _rispostaRoutine,
+        'mood'     : _rispostaMood,
       });
 
-      if (mounted) setState(() => _salvato = true);
+      // ── 2. Aggiorna la streak in SharedPreferences ─────────────────────────
+      final prefs       = await SharedPreferences.getInstance();
+      final lastCheckin = prefs.getString(_keyCheckinDate) ?? '';
+      int streak        = prefs.getInt(_keyStreak) ?? 0;
+
+      if (lastCheckin == _ieri()) {
+        // Giorno consecutivo → incrementa
+        streak += 1;
+      } else if (lastCheckin != oggi) {
+        // Giorno saltato (o primo check-in in assoluto) → azzera
+        streak = 1;
+        if (lastCheckin.isNotEmpty) _streakRotta = true;
+      }
+      // Se lastCheckin == oggi non dovrebbe arrivare qui (bloccato da _giaCompletato),
+      // ma per sicurezza non modifichiamo nulla in quel caso.
+
+      final best = prefs.getInt(_keyBestStreak) ?? 0;
+      if (streak > best) await prefs.setInt(_keyBestStreak, streak);
+
+      await prefs.setInt(_keyStreak, streak);
+      await prefs.setString(_keyCheckinDate, oggi);
+      // ──────────────────────────────────────────────────────────────────────
+
+      if (mounted) {
+        setState(() {
+          _nuovaStreak = streak;
+          _salvato     = true;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -85,6 +132,8 @@ class _CheckInState extends State<CheckIn> {
       if (mounted) setState(() => _caricamento = false);
     }
   }
+
+  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -126,14 +175,11 @@ class _CheckInState extends State<CheckIn> {
       children: [
         const SizedBox(height: 24),
 
-        // Header
         Center(
           child: Container(
-            width: 72,
-            height: 72,
+            width: 72, height: 72,
             decoration: const BoxDecoration(
-              color: Color(0xFFE8EEF7),
-              shape: BoxShape.circle,
+              color: Color(0xFFE8EEF7), shape: BoxShape.circle,
             ),
             child: const Icon(Icons.nightlight_round,
                 color: Color(0xFF7A9CC6), size: 36),
@@ -144,8 +190,7 @@ class _CheckInState extends State<CheckIn> {
           child: Text(
             'Come è andata oggi?',
             style: GoogleFonts.playfairDisplay(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
+              fontSize: 22, fontWeight: FontWeight.w600,
               color: const Color(0xFF3A4A5C),
             ),
           ),
@@ -154,21 +199,16 @@ class _CheckInState extends State<CheckIn> {
         Center(
           child: Text(
             _dataFormattata(),
-            style: const TextStyle(
-              color: Color(0xFF8A9BB5),
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
           ),
         ),
 
         const SizedBox(height: 36),
 
-        // Domanda 1
         Text(
           'Hai seguito la tua routine?',
           style: GoogleFonts.playfairDisplay(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontSize: 16, fontWeight: FontWeight.w600,
             color: const Color(0xFF3A4A5C),
           ),
         ),
@@ -210,8 +250,7 @@ class _CheckInState extends State<CheckIn> {
                           color: selezionato
                               ? opzione['color'] as Color
                               : const Color(0xFF8A9BB5),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
+                          fontWeight: FontWeight.w600, fontSize: 13,
                         ),
                       ),
                     ],
@@ -224,12 +263,10 @@ class _CheckInState extends State<CheckIn> {
 
         const SizedBox(height: 32),
 
-        // Domanda 2
         Text(
           'Come ti sei sentito?',
           style: GoogleFonts.playfairDisplay(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+            fontSize: 16, fontWeight: FontWeight.w600,
             color: const Color(0xFF3A4A5C),
           ),
         ),
@@ -296,8 +333,7 @@ class _CheckInState extends State<CheckIn> {
             child: Center(
               child: _caricamento
                   ? const SizedBox(
-                width: 20,
-                height: 20,
+                width: 20, height: 20,
                 child: CircularProgressIndicator(
                     color: Colors.white, strokeWidth: 2),
               )
@@ -305,8 +341,7 @@ class _CheckInState extends State<CheckIn> {
                 'Salva check-in',
                 style: TextStyle(
                   color: pronto ? Colors.white : const Color(0xFF8A9BB5),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+                  fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
             ),
@@ -317,41 +352,87 @@ class _CheckInState extends State<CheckIn> {
     );
   }
 
+  // ── Schermata di successo con streak ───────────────────────────────────────
   Widget _buildSuccesso() {
+    final bool primoCheckin = _nuovaStreak == 1 && !_streakRotta;
+    final bool streakRotta  = _streakRotta && _nuovaStreak == 1;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 60),
+
+        // Icona successo
         Container(
-          width: 80,
-          height: 80,
+          width: 80, height: 80,
           decoration: const BoxDecoration(
-            color: Color(0xFFE8F5E9),
-            shape: BoxShape.circle,
+            color: Color(0xFFE8F5E9), shape: BoxShape.circle,
           ),
           child: const Icon(Icons.check_circle_outline_rounded,
               color: Color(0xFF66BB6A), size: 44),
         ),
         const SizedBox(height: 24),
+
         Text(
           'Check-in completato!',
           style: GoogleFonts.playfairDisplay(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
+            fontSize: 24, fontWeight: FontWeight.w600,
             color: const Color(0xFF3A4A5C),
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          'Ottimo lavoro. Ci vediamo domani.',
+        Text(
+          streakRotta
+              ? 'Ripartito da capo — da oggi si ricomincia! 💪'
+              : primoCheckin
+              ? 'Ottimo inizio. Il viaggio comincia adesso!'
+              : 'Ottimo lavoro. Ci vediamo domani.',
           textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Color(0xFF8A9BB5),
-            fontSize: 14,
-            height: 1.6,
+          style: const TextStyle(
+            color: Color(0xFF8A9BB5), fontSize: 14, height: 1.6,
           ),
         ),
+
+        const SizedBox(height: 32),
+
+        // ── Badge streak ──────────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8EEF7),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 32)),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$_nuovaStreak ${_nuovaStreak == 1 ? 'giorno' : 'giorni'} di fila',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 20, fontWeight: FontWeight.w700,
+                      color: const Color(0xFF3A4A5C),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    streakRotta ? 'Nuova serie iniziata' : 'Continua così!',
+                    style: const TextStyle(
+                      color: Color(0xFF8A9BB5), fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // ─────────────────────────────────────────────────────────────────
+
         const Spacer(),
+
         GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
@@ -366,8 +447,7 @@ class _CheckInState extends State<CheckIn> {
                 'Torna indietro',
                 style: TextStyle(
                   color: Color(0xFF3A4A5C),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+                  fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
             ),
@@ -384,11 +464,9 @@ class _CheckInState extends State<CheckIn> {
       children: [
         const SizedBox(height: 60),
         Container(
-          width: 80,
-          height: 80,
+          width: 80, height: 80,
           decoration: const BoxDecoration(
-            color: Color(0xFFE8EEF7),
-            shape: BoxShape.circle,
+            color: Color(0xFFE8EEF7), shape: BoxShape.circle,
           ),
           child: const Icon(Icons.star_rounded,
               color: Color(0xFF7A9CC6), size: 44),
@@ -397,8 +475,7 @@ class _CheckInState extends State<CheckIn> {
         Text(
           'Già fatto oggi!',
           style: GoogleFonts.playfairDisplay(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
+            fontSize: 24, fontWeight: FontWeight.w600,
             color: const Color(0xFF3A4A5C),
           ),
         ),
@@ -407,9 +484,7 @@ class _CheckInState extends State<CheckIn> {
           'Hai già completato il check-in per oggi.\nTorna domani!',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF8A9BB5),
-            fontSize: 14,
-            height: 1.6,
+            color: Color(0xFF8A9BB5), fontSize: 14, height: 1.6,
           ),
         ),
         const Spacer(),
@@ -427,8 +502,7 @@ class _CheckInState extends State<CheckIn> {
                 'Torna indietro',
                 style: TextStyle(
                   color: Color(0xFF3A4A5C),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
+                  fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
             ),
@@ -441,13 +515,9 @@ class _CheckInState extends State<CheckIn> {
 
   String _dataFormattata() {
     final now = DateTime.now();
-    const mesi = [
-      'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
-      'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
-    ];
-    const giorni = [
-      'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica'
-    ];
+    const mesi   = ['gennaio','febbraio','marzo','aprile','maggio','giugno',
+      'luglio','agosto','settembre','ottobre','novembre','dicembre'];
+    const giorni = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
     return '${giorni[now.weekday - 1]} ${now.day} ${mesi[now.month - 1]}';
   }
 }
