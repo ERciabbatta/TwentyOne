@@ -119,8 +119,8 @@ class _HomeState extends State<Home> {
     final currentStreak = data?['streak'] as int? ?? 0;
 
     if (lastDateStr == null) {
-      await doc.set({'lastActiveDate': todayStr, 'streak': 1}, SetOptions(merge: true));
-      return 1;
+      await doc.set({'lastActiveDate': todayStr, 'streak': 0}, SetOptions(merge: true));
+      return 0;
     }
 
     final lastDate = DateTime.parse(lastDateStr);

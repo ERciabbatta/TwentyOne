@@ -274,7 +274,8 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2),
+                          color: Colors.white, strokeWidth: 2
+                      ),
                     )
                         : Text(
                       widget.modifica ? 'Salva' : 'Inizia i 21 giorni →',
