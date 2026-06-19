@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twentyone/widget/auth.dart';
 
 class CheckIn extends StatefulWidget {
@@ -12,20 +11,17 @@ class CheckIn extends StatefulWidget {
 }
 
 class _CheckInState extends State<CheckIn> {
-  int? _rispostaRoutine; // 0 = Sì, 1 = In parte, 2 = No
-  int? _rispostaMood;   // 0-4 emoji
+  int? _rispostaRoutine;
+  int? _rispostaMood;
   bool _caricamento = false;
   bool _salvato = false;
   bool _giaCompletato = false;
-
-  // ── Nuovi campi per la streak ──────────────────────────────────────────────
-  int _nuovaStreak = 0;   // valorizzato dopo il salvataggio riuscito
-  bool _streakRotta = false; // true se si è interrotta la sequenza
+  int _nuovaStreak = 0;
+  bool _streakRotta = false;
 
   static const _keyStreak      = 'streak';
-  static const _keyCheckinDate = 'checkin_date'; // 'yyyy-MM-dd'
+  static const _keyCheckinDate = 'checkin_date';
   static const _keyBestStreak  = 'best_streak';
-  // ──────────────────────────────────────────────────────────────────────────
 
   final List<Map<String, dynamic>> _opzioniRoutine = [
     {'label': 'Sì',      'icon': Icons.check_circle_rounded,  'color': Color(0xFF66BB6A)},
@@ -42,7 +38,6 @@ class _CheckInState extends State<CheckIn> {
     _verificaCheckInOggi();
   }
 
-  // ── Helpers data ───────────────────────────────────────────────────────────
   String _chiaveData(DateTime data) =>
       '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
 
@@ -50,7 +45,6 @@ class _CheckInState extends State<CheckIn> {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
     return _chiaveData(yesterday);
   }
-  // ──────────────────────────────────────────────────────────────────────────
 
   Future<void> _verificaCheckInOggi() async {
     final uid = Auth().currentUser?.uid;
@@ -79,46 +73,42 @@ class _CheckInState extends State<CheckIn> {
 
     try {
       final oggi = _chiaveData(DateTime.now());
+      final userDoc = FirebaseFirestore.instance.collection('utenti').doc(uid);
 
-      // ── 1. Salva su Firestore (invariato) ──────────────────────────────────
-      await FirebaseFirestore.instance
-          .collection('utenti')
-          .doc(uid)
-          .collection('checkin')
-          .doc(oggi)
-          .set({
+      await userDoc.collection('checkin').doc(oggi).set({
         'data'     : oggi,
         'timestamp': FieldValue.serverTimestamp(),
         'routine'  : _rispostaRoutine,
         'mood'     : _rispostaMood,
       });
 
-      // ── 2. Aggiorna la streak in SharedPreferences ─────────────────────────
-      final prefs       = await SharedPreferences.getInstance();
-      final lastCheckin = prefs.getString(_keyCheckinDate) ?? '';
-      int streak        = prefs.getInt(_keyStreak) ?? 0;
+      final snapshot = await userDoc.get();
+      final data = snapshot.data();
+      final lastDateStr = data?['lastActiveDate'] as String?;
+      final currentStreak = data?['streak'] as int? ?? 0;
+      final bestStreak = data?['bestStreak'] as int? ?? 0;
 
-      if (lastCheckin == _ieri()) {
-        // Giorno consecutivo → incrementa
-        streak += 1;
-      } else if (lastCheckin != oggi) {
-        // Giorno saltato (o primo check-in in assoluto) → azzera
-        streak = 1;
-        if (lastCheckin.isNotEmpty) _streakRotta = true;
+      int nuovaStreak;
+      if (lastDateStr == null) {
+        nuovaStreak = 1;
+      } else if (lastDateStr == oggi) {
+        nuovaStreak = currentStreak;
+      } else if (lastDateStr == _ieri()) {
+        nuovaStreak = currentStreak + 1;
+      } else {
+        nuovaStreak = 1;
+        _streakRotta = lastDateStr.isNotEmpty;
       }
-      // Se lastCheckin == oggi non dovrebbe arrivare qui (bloccato da _giaCompletato),
-      // ma per sicurezza non modifichiamo nulla in quel caso.
 
-      final best = prefs.getInt(_keyBestStreak) ?? 0;
-      if (streak > best) await prefs.setInt(_keyBestStreak, streak);
-
-      await prefs.setInt(_keyStreak, streak);
-      await prefs.setString(_keyCheckinDate, oggi);
-      // ──────────────────────────────────────────────────────────────────────
+      await userDoc.set({
+        'lastActiveDate': oggi,
+        'streak': nuovaStreak,
+        'bestStreak': nuovaStreak > bestStreak ? nuovaStreak : bestStreak,
+      }, SetOptions(merge: true));
 
       if (mounted) {
         setState(() {
-          _nuovaStreak = streak;
+          _nuovaStreak = nuovaStreak;
           _salvato     = true;
         });
       }
@@ -132,8 +122,6 @@ class _CheckInState extends State<CheckIn> {
       if (mounted) setState(() => _caricamento = false);
     }
   }
-
-  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +340,6 @@ class _CheckInState extends State<CheckIn> {
     );
   }
 
-  // ── Schermata di successo con streak ───────────────────────────────────────
   Widget _buildSuccesso() {
     final bool primoCheckin = _nuovaStreak == 1 && !_streakRotta;
     final bool streakRotta  = _streakRotta && _nuovaStreak == 1;
@@ -362,7 +349,6 @@ class _CheckInState extends State<CheckIn> {
       children: [
         const SizedBox(height: 60),
 
-        // Icona successo
         Container(
           width: 80, height: 80,
           decoration: const BoxDecoration(
@@ -395,7 +381,6 @@ class _CheckInState extends State<CheckIn> {
 
         const SizedBox(height: 32),
 
-        // ── Badge streak ──────────────────────────────────────────────────
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
           decoration: BoxDecoration(
@@ -429,7 +414,6 @@ class _CheckInState extends State<CheckIn> {
             ],
           ),
         ),
-        // ─────────────────────────────────────────────────────────────────
 
         const Spacer(),
 

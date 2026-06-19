@@ -34,24 +34,21 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _caricaDatiUtente() async {
-    final streak    = await checkAndUpdateStreak();
+    final streak    = await _leggiStreak(); // ← era checkAndUpdateStreak()
     final rimanenti = await _calcolaGiorniRimanenti();
     final mostraBtn = await _calcolaBottoneCheckin();
-    // _calcolaGiorniRimanenti già legge il doc utente, ma lo rileggiamo
-    // separatamente per l'obiettivo per non complicare quella funzione
-    final obiettivo = await _caricaObiettivo(); // ← nuovo
+    final obiettivo = await _caricaObiettivo();
     if (mounted) {
       setState(() {
         _streakCount          = streak;
         _giorniRimanenti      = rimanenti;
         _cicloCompletato      = rimanenti == 0;
         _mostraBottoneCheckin = mostraBtn;
-        _obiettivo            = obiettivo; // ← nuovo
+        _obiettivo            = obiettivo;
       });
     }
   }
 
-  // ← nuovo
   Future<String> _caricaObiettivo() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return '';
@@ -105,32 +102,21 @@ class _HomeState extends State<Home> {
     return rim < 0 ? 0 : rim;
   }
 
-  Future<int> checkAndUpdateStreak() async {
+  Future<int> _leggiStreak() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 0;
 
-    final doc      = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
-    final snapshot = await doc.get();
-    final data     = snapshot.data();
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .get();
 
-    final today         = DateTime.now();
-    final todayStr      = _dateKey(today);
-    final lastDateStr   = data?['lastActiveDate'] as String?;
-    final currentStreak = data?['streak'] as int? ?? 0;
+    final lastDateStr = doc.data()?['lastActiveDate'] as String?;
+    final streak = doc.data()?['streak'] as int? ?? 0;
 
-    if (lastDateStr == null) {
-      await doc.set({'lastActiveDate': todayStr, 'streak': 0}, SetOptions(merge: true));
-      return 0;
-    }
+    if (lastDateStr == null) return 0;
 
-    final lastDate = DateTime.parse(lastDateStr);
-    final diff     = _dayDifference(lastDate, today);
-
-    if (diff == 0) return currentStreak;
-
-    final newStreak = diff == 1 ? currentStreak + 1 : 1;
-    await doc.set({'lastActiveDate': todayStr, 'streak': newStreak}, SetOptions(merge: true));
-    return newStreak;
+    return streak;
   }
 
   String _dateKey(DateTime date) =>
@@ -440,9 +426,15 @@ class _HomeState extends State<Home> {
               final giorni = List<int>.from(nota['giorni'] ?? []);
               if (!giorni.contains(_giornoOggi)) continue;
               final fascia = _getFasciaOraria(nota['inizio'] ?? '');
-              if (fascia == 'mattina')         mattina.add(nota);
-              else if (fascia == 'pomeriggio') pomeriggio.add(nota);
-              else                             sera.add(nota);
+              if (fascia == 'mattina'){
+                mattina.add(nota);
+              }
+              else if (fascia == 'pomeriggio') {
+                pomeriggio.add(nota);
+              }
+              else {
+                sera.add(nota);
+              }
             }
 
             for (final lista in [mattina, pomeriggio, sera]) {

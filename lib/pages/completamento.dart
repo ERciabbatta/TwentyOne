@@ -323,7 +323,7 @@ class _CompletamentoState extends State<Completamento>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6B8CAE).withOpacity(0.3),
+                                color: const Color(0xFF6B8CAE).withValues(alpha: 0.3),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
@@ -549,7 +549,7 @@ class _ConfettiPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
-      final paint = Paint()..color = p.color.withOpacity(0.8);
+      final paint = Paint()..color = p.color.withValues(alpha: 0.8);
       final x = (p.x + sin(progress * 2 * pi * p.wobble * 10)) * size.width;
       final y = (p.y + progress * p.speed * 3) % 1.2 * size.height;
       canvas.save();

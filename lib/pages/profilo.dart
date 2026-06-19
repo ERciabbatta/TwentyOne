@@ -8,7 +8,7 @@ import 'package:twentyone/pages/notifiche.dart';
 import 'package:twentyone/pages/obiettivo.dart';
 
 class Profilo extends StatefulWidget {
-  Profilo({super.key});
+  const Profilo({super.key});
 
   @override
   State<Profilo> createState() => _ProfiloState();
