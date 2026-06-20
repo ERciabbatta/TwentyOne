@@ -1,5 +1,3 @@
-// ignore_for_file: file_names
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/pages/home.dart';
@@ -7,18 +5,21 @@ import 'package:twentyone/pages/note.dart';
 import 'package:twentyone/pages/inspo.dart';
 import 'package:twentyone/pages/profilo.dart';
 
-class MyBottomBar extends StatefulWidget {
-  const MyBottomBar({super.key});
+// ignore: camel_case_types
+class my_bottom_bar extends StatefulWidget {
+  const my_bottom_bar({super.key});
 
   @override
-  State<MyBottomBar> createState() => _MyBottomBarState();
+  State<my_bottom_bar> createState() => _my_bottom_barState();
 }
 
-class _MyBottomBarState extends State<MyBottomBar> {
+// ignore: camel_case_types
+class _my_bottom_barState extends State<my_bottom_bar> {
   int _currentPage = 0;
 
   // Una Key diversa per ogni "visita" alla tab Home forza la ricostruzione
-
+  // del widget (e quindi initState/_caricaDatiUtente) ogni volta che torni
+  // su quella tab, cosi' streak/obiettivo/giorni rimanenti sono sempre aggiornati.
   int _homeRebuildCount = 0;
 
   List<Widget> get _pages => [

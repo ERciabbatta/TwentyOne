@@ -17,6 +17,12 @@ class Profilo extends StatefulWidget {
 class _ProfiloState extends State<Profilo> {
   final User? user = Auth().currentUser;
   String _obiettivo = '';
+  String get _initials {
+    final displayName = user?.displayName ?? 'Utente';
+    return displayName.isNotEmpty
+        ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
+        : '?';
+  }
 
   @override
   void initState() {
@@ -24,15 +30,117 @@ class _ProfiloState extends State<Profilo> {
     _caricaObiettivo();
   }
 
+  String _avatarColore = '0xFF7A9CC6';
+  String _avatarEmoji = '';
+
   Future<void> _caricaObiettivo() async {
     final uid = user?.uid;
     if (uid == null) return;
-    final doc = await FirebaseFirestore.instance
-        .collection('utenti')
-        .doc(uid)
-        .get();
-    final ob = doc.data()?['obiettivo'] as String? ?? '';
-    if (mounted) setState(() => _obiettivo = ob);
+    final doc = await FirebaseFirestore.instance.collection('utenti').doc(uid).get();
+    final data = doc.data();
+    if (mounted) setState(() {
+      _obiettivo = data?['obiettivo'] as String? ?? '';
+      _avatarColore = data?['avatarColore'] as String? ?? '0xFF7A9CC6';
+      _avatarEmoji = data?['avatarEmoji'] as String? ?? '';
+    });
+  }
+
+  Future<void> _mostraPickerAvatar() async {
+    final colori = [
+      '0xFF7A9CC6', '0xFF81C784', '0xFFE57373',
+      '0xFFFFB74D', '0xFFBA68C8', '0xFF4DB6AC',
+      '0xFF90A4AE', '0xFFF06292',
+    ];
+    final emoji = ['', '🌙', '⭐', '🌿', '🔥', '🎯', '💎', '🦋', '🌊', '🍀'];
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Personalizza avatar',
+                style: GoogleFonts.playfairDisplay(
+                    fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A4A5C))),
+            const SizedBox(height: 20),
+            Text('Colore', style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              children: colori.map((c) {
+                final selected = c == _avatarColore;
+                return GestureDetector(
+                  onTap: () => _salvaAvatar(c, _avatarEmoji),
+                  child: Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(c)),
+                      shape: BoxShape.circle,
+                      border: selected
+                          ? Border.all(color: const Color(0xFF3A4A5C), width: 2.5)
+                          : null,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+            Text('Emoji', style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              children: emoji.map((e) {
+                final selected = e == _avatarEmoji;
+                return GestureDetector(
+                  onTap: () => _salvaAvatar(_avatarColore, e),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected ? const Color(0xFFE8EEF7) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: e.isEmpty
+                          ? Text(_initials,
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: selected
+                                  ? const Color(0xFF3A4A5C)
+                                  : const Color(0xFF8A9BB5)))
+                          : Text(e, style: const TextStyle(fontSize: 22)),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _salvaAvatar(String colore, String emoji) async {
+    setState(() {
+      _avatarColore = colore;
+      _avatarEmoji = emoji;
+    });
+    Navigator.pop(context);
+    final uid = user?.uid;
+    if (uid == null) return;
+    await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
+      'avatarColore': colore,
+      'avatarEmoji': emoji,
+    });
   }
 
   Future<void> signOut() async {
@@ -70,27 +178,32 @@ class _ProfiloState extends State<Profilo> {
             Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF7A9CC6),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF7A9CC6).withValues(alpha: 0.3),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Text(
-                        initials,
-                        style: GoogleFonts.playfairDisplay(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                  GestureDetector(
+                    onTap: _mostraPickerAvatar,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Color(int.parse(_avatarColore)),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(int.parse(_avatarColore)).withValues(alpha: 0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: _avatarEmoji.isNotEmpty
+                            ? Text(_avatarEmoji, style: const TextStyle(fontSize: 32))
+                            : Text(
+                          initials,
+                          style: GoogleFonts.playfairDisplay(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -271,7 +384,7 @@ class _ProfiloState extends State<Profilo> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text('Versione 1.0.0',
+                          const Text('Versione 1.3.7',
                               style: TextStyle(
                                   color: Color(0xFF8A9BB5), fontSize: 13)),
                           const SizedBox(height: 16),
