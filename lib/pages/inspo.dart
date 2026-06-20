@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 
 const Color _bgColor = Color(0xFFF7F9FC);
@@ -21,6 +23,49 @@ class Inspo extends StatefulWidget {
 class _InspoState extends State<Inspo> {
   String _selectedCategory = 'Tutte';
   final Set<int> _favorites = {};
+  bool _favoritiCaricati = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _caricaPreferiti();
+  }
+
+  Future<void> _caricaPreferiti() async {
+    final uid = Auth().currentUser?.uid;
+    if (uid == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .get();
+    final preferiti = List<int>.from(doc.data()?['preferiti'] ?? []);
+    if (mounted) {
+      setState(() {
+        _favorites.addAll(preferiti);
+        _favoritiCaricati = true;
+      });
+    }
+  }
+
+  Future<void> _salvaPreferiti() async {
+    final uid = Auth().currentUser?.uid;
+    if (uid == null) return;
+    await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .set({'preferiti': _favorites.toList()}, SetOptions(merge: true));
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      if (_favorites.contains(index)) {
+        _favorites.remove(index);
+      } else {
+        _favorites.add(index);
+      }
+    });
+    _salvaPreferiti();
+  }
 
   Quote get _quoteOfTheDay => getQuoteOfDay();
 
@@ -67,14 +112,8 @@ class _InspoState extends State<Inspo> {
                     const SizedBox(height: 24),
                     _FeaturedCard(
                       quote: _quoteOfTheDay,
-                      isFavorite: _favorites.contains(-1),
-                      onFavoriteTap: () => setState(() {
-                        if (_favorites.contains(-1)) {
-                          _favorites.remove(-1);
-                        } else {
-                          _favorites.add(-1);
-                        }
-                      }),
+                      isFavorite: _favorites.contains(allQuotes.indexOf(_quoteOfTheDay)),
+                      onFavoriteTap: () => _toggleFavorite(allQuotes.indexOf(_quoteOfTheDay)),
                     ),
                     const SizedBox(height: 24),
                     Text(
@@ -109,13 +148,7 @@ class _InspoState extends State<Inspo> {
                       child: _QuoteCard(
                         quote: quote,
                         isFavorite: _favorites.contains(globalIndex),
-                        onFavoriteTap: () => setState(() {
-                          if (_favorites.contains(globalIndex)) {
-                            _favorites.remove(globalIndex);
-                          } else {
-                            _favorites.add(globalIndex);
-                          }
-                        }),
+                        onFavoriteTap: () => _toggleFavorite(globalIndex),
                       ),
                     );
                   },
@@ -365,3 +398,4 @@ class _QuoteCard extends StatelessWidget {
     );
   }
 }
+

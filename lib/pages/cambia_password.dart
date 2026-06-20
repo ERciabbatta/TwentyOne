@@ -70,7 +70,6 @@ class _CambioPasswordState extends State<CambioPassword> {
       children: [
         const SizedBox(height: 32),
 
-        // Icona
         Center(
           child: Container(
             width: 72,
@@ -216,3 +215,4 @@ class _CambioPasswordState extends State<CambioPassword> {
     );
   }
 }
+

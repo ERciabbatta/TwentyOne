@@ -19,10 +19,6 @@ class _CheckInState extends State<CheckIn> {
   int _nuovaStreak = 0;
   bool _streakRotta = false;
 
-  static const _keyStreak      = 'streak';
-  static const _keyCheckinDate = 'checkin_date';
-  static const _keyBestStreak  = 'best_streak';
-
   final List<Map<String, dynamic>> _opzioniRoutine = [
     {'label': 'Sì',      'icon': Icons.check_circle_rounded,  'color': Color(0xFF66BB6A)},
     {'label': 'In parte','icon': Icons.remove_circle_rounded, 'color': Color(0xFFFFB74D)},

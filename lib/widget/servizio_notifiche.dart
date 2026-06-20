@@ -288,20 +288,5 @@ class NotificationService {
   Future<void> cancellaCheckIn() async {
     await _plugin.cancel(id: _idCheckIn);
   }
-
-  tz.TZDateTime? _prossimaTriggerTime(String orario) {
-    final parts = orario.split(':');
-    if (parts.length != 2) return null;
-    final ore = int.tryParse(parts[0]);
-    final minuti = int.tryParse(parts[1]);
-    if (ore == null || minuti == null) return null;
-    final now = tz.TZDateTime.now(tz.local);
-    var eventoOggi =
-    tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti);
-    var notificaTime = eventoOggi.subtract(const Duration(minutes: 15));
-    if (notificaTime.isBefore(now)) {
-      notificaTime = notificaTime.add(const Duration(days: 1));
-    }
-    return notificaTime;
-  }
 }
+

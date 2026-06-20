@@ -1,30 +1,48 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Test sulla logica pura dell'app (nessuna dipendenza da Firebase),
+// utili a verificare invarianti di base senza dover mockare i servizi
+// esterni (auth, Firestore, notifiche locali).
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:twentyone/main.dart';
+import 'package:twentyone/widget/quotes_data.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  group('quotes_data', () {
+    test('allQuotes non è vuota', () {
+      expect(allQuotes, isNotEmpty);
+    });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    test('ogni citazione ha testo, autore e categoria non vuoti', () {
+      for (final quote in allQuotes) {
+        expect(quote.text.trim(), isNotEmpty);
+        expect(quote.author.trim(), isNotEmpty);
+        expect(quote.category.trim(), isNotEmpty);
+      }
+    });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    test('getQuoteOfDay restituisce sempre una citazione presente in allQuotes', () {
+      final quote = getQuoteOfDay();
+      expect(allQuotes, contains(quote));
+    });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    test('getQuoteOfDay è deterministica nello stesso giorno', () {
+      final prima = getQuoteOfDay();
+      final dopo = getQuoteOfDay();
+      expect(prima.text, equals(dopo.text));
+    });
+
+    test('le categorie usate nelle citazioni sono un sottoinsieme di quelle note', () {
+      const categorieNote = {
+        'Disciplina',
+        'Abitudini',
+        'Mindset',
+        'Cambiamento',
+        'Coraggio',
+        'Gratitudine',
+      };
+      for (final quote in allQuotes) {
+        expect(categorieNote, contains(quote.category),
+            reason: 'Categoria sconosciuta: ${quote.category}');
+      }
+    });
   });
 }

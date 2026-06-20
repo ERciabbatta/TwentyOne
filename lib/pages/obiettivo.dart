@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 
 class OnboardingObiettivo extends StatefulWidget {
-  /// Se true, è in modalità modifica (da Profilo) — mostra "Salva" invece di "Inizia"
+
   final bool modifica;
 
   final VoidCallback? onCompletato;
@@ -19,7 +19,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
   bool _caricamento = false;
   String? _errore;
 
-  // Suggerimenti rapidi tappabili
   final List<String> _suggerimenti = [
     'Meditare ogni mattina',
     'Correre 3 volte a settimana',
@@ -77,9 +76,9 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
       if (!mounted) return;
       if (widget.modifica) {
-        Navigator.pop(context, testo); // ritorna il testo al chiamante (Profilo)
+        Navigator.pop(context, testo);
       } else {
-        widget.onCompletato?.call(); // segnala ad AuthGate di procedere
+        widget.onCompletato?.call();
       }
     } catch (_) {
       if (mounted) setState(() => _errore = 'Errore nel salvataggio. Riprova.');
@@ -98,7 +97,7 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      // Nessun back button se è onboarding (modificia = false)
+
       appBar: widget.modifica
           ? AppBar(
         backgroundColor: Colors.white,
@@ -126,7 +125,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
             children: [
               SizedBox(height: widget.modifica ? 24 : 60),
 
-              // Icona
               Center(
                 child: Container(
                   width: 72,
@@ -141,7 +139,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
               ),
               const SizedBox(height: 24),
 
-              // Titolo
               Center(
                 child: Text(
                   widget.modifica
@@ -173,7 +170,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
               const SizedBox(height: 32),
 
-              // Campo testo
               TextField(
                 controller: _controller,
                 maxLength: 80,
@@ -206,7 +202,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                 },
               ),
 
-              // Errore
               if (_errore != null) ...[
                 const SizedBox(height: 6),
                 Text(
@@ -218,7 +213,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
               const SizedBox(height: 16),
 
-              // Suggerimenti
               Text(
                 'Oppure scegli uno di questi:',
                 style: const TextStyle(
@@ -257,7 +251,6 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
               const Spacer(),
 
-              // Bottone
               GestureDetector(
                 onTap: _caricamento ? null : _salva,
                 child: AnimatedContainer(

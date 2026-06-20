@@ -313,3 +313,4 @@ class _NoteState extends State<Note> {
     );
   }
 }
+

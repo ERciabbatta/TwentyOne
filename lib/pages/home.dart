@@ -6,7 +6,6 @@ import 'package:twentyone/pages/checkin.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 
 class Home extends StatefulWidget {
@@ -25,8 +24,6 @@ class _HomeState extends State<Home> {
   bool _mostraBottoneCheckin = false;
   String _obiettivo = '';
 
-  static const _keyCheckinDate = 'checkin_date';
-
   @override
   void initState() {
     super.initState();
@@ -34,7 +31,7 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _caricaDatiUtente() async {
-    final streak    = await _leggiStreak(); // ← era checkAndUpdateStreak()
+    final streak    = await _leggiStreak();
     final rimanenti = await _calcolaGiorniRimanenti();
     final mostraBtn = await _calcolaBottoneCheckin();
     final obiettivo = await _caricaObiettivo();
@@ -62,10 +59,18 @@ class _HomeState extends State<Home> {
   Future<bool> _calcolaBottoneCheckin() async {
     final ora = DateTime.now().hour;
     if (ora < 22) return false;
-    final prefs       = await SharedPreferences.getInstance();
-    final lastCheckin = prefs.getString(_keyCheckinDate) ?? '';
-    final oggi        = _dateKey(DateTime.now());
-    return lastCheckin != oggi;
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(user.uid)
+        .get();
+
+    final lastActiveDate = doc.data()?['lastActiveDate'] as String?;
+    final oggi = _dateKey(DateTime.now());
+    return lastActiveDate != oggi;
   }
 
   Future<int> _calcolaGiorniRimanenti() async {
@@ -200,7 +205,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // ← nuovo
   Widget _buildObiettivoStrip() {
     return Container(
       width: double.infinity,
@@ -473,7 +477,6 @@ class _HomeState extends State<Home> {
                 ),
                 const SizedBox(height: 12),
 
-                // ← nuovo: strip obiettivo, solo se impostato
                 if (_obiettivo.isNotEmpty) ...[
                   _buildObiettivoStrip(),
                   const SizedBox(height: 12),

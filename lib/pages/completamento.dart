@@ -219,6 +219,9 @@ class _CompletamentoState extends State<Completamento>
 
     final utentiRef = FirebaseFirestore.instance.collection('utenti').doc(uid);
 
+    // bestStreak NON viene toccato: è il record storico personale.
+    // Le note non vengono toccate: sono ricorrenti settimanali, non legate
+
     await utentiRef.set({
       'dataInizio': DateTime.now().toIso8601String().substring(0, 10),
       'streak': 0,

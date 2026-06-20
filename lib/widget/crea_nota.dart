@@ -57,17 +57,44 @@ class _CreaNotaState extends State<CreaNota> {
     return '$ore:$minuti';
   }
 
+  void _mostraErrore(BuildContext context, String messaggio) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(messaggio),
+        backgroundColor: const Color(0xFFE57373),
+      ),
+    );
+  }
+
   Future<void> _salvaNota(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
-    if (_orarioInizio == null || _orarioFine == null) return;
+    if (_controllerTesto.text.trim().isEmpty) {
+      _mostraErrore(context, 'Scrivi il testo della nota.');
+      return;
+    }
+
+    if (_orarioInizio == null || _orarioFine == null) {
+      _mostraErrore(context, 'Imposta orario di inizio e fine.');
+      return;
+    }
 
     final giorniScelti = <int>[];
     for (int i = 0; i < 7; i++) {
       if (_giorniSelezionati[i]) giorniScelti.add(i);
     }
-    if (giorniScelti.isEmpty) return;
+    if (giorniScelti.isEmpty) {
+      _mostraErrore(context, 'Seleziona almeno un giorno.');
+      return;
+    }
+
+    if (_orarioFine!.hour * 60 + _orarioFine!.minute <=
+        _orarioInizio!.hour * 60 + _orarioInizio!.minute) {
+      _mostraErrore(context, 'L\'orario di fine deve essere dopo l\'inizio.');
+      return;
+    }
 
     final nuovoIniziMin = _orarioInizio!.hour * 60 + _orarioInizio!.minute;
     final nuovoFineMin = _orarioFine!.hour * 60 + _orarioFine!.minute;
@@ -457,3 +484,4 @@ class _CreaNotaState extends State<CreaNota> {
     );
   }
 }
+

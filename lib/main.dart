@@ -65,10 +65,6 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   bool _notificheProgrammate = false;
 
-  // Stato onboarding obiettivo:
-  // null  = ancora in caricamento
-  // false = obiettivo mancante → mostra onboarding
-  // true  = obiettivo presente → vai a MyBottomBar
   bool? _obiettivoPresente;
 
   @override
@@ -76,43 +72,38 @@ class _AuthGateState extends State<AuthGate> {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // Attesa connessione Firebase
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const _Splash();
         }
 
-        // Utente non loggato
         if (snapshot.data == null) {
           _notificheProgrammate = false;
-          _obiettivoPresente = null; // reset per il prossimo login
+          _obiettivoPresente = null;
           return const NonIscritto();
         }
 
-        // Utente loggato — programma notifiche una volta sola
         if (!_notificheProgrammate) {
           _notificheProgrammate = true;
           _scheduleNotifiche();
           WidgetsBinding.instance.addPostFrameCallback((_) {
             NotificationService().handleLaunchNotification();
           });
-          // Controlla se l'obiettivo è già stato impostato
+
           _verificaObiettivo(snapshot.data!.uid);
         }
 
-        // Mentre verifichiamo l'obiettivo, mostra splash
         if (_obiettivoPresente == null) return const _Splash();
 
-        // Obiettivo mancante → onboarding
         if (_obiettivoPresente == false) {
           return OnboardingObiettivo(
             onCompletato: () {
-              // L'utente ha salvato l'obiettivo: vai all'app
+
               if (mounted) setState(() => _obiettivoPresente = true);
             },
           );
         }
 
-        // Tutto ok → app normale
         return const MyBottomBar();
       },
     );
@@ -130,7 +121,7 @@ class _AuthGateState extends State<AuthGate> {
             obiettivo != null && obiettivo.trim().isNotEmpty);
       }
     } catch (_) {
-      // In caso di errore (es. offline al primo avvio) lasciamo passare
+
       if (mounted) setState(() => _obiettivoPresente = true);
     }
   }
@@ -142,7 +133,6 @@ class _AuthGateState extends State<AuthGate> {
   }
 }
 
-// Splash minimalista usato durante il caricamento
 class _Splash extends StatelessWidget {
   const _Splash();
 

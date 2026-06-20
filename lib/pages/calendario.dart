@@ -177,7 +177,7 @@ class _CalendarioState extends State<Calendario> {
               ),
             ),
             const SizedBox(height: 20),
-            // Legenda
+
             if (!_caricamento)
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -242,3 +242,4 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 }
+

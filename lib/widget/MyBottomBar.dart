@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/pages/home.dart';
 import 'package:twentyone/pages/note.dart';
 import 'package:twentyone/pages/inspo.dart';
-import 'package:twentyone/widget/widget_tree.dart';
+import 'package:twentyone/pages/profilo.dart';
 
 class MyBottomBar extends StatefulWidget {
   const MyBottomBar({super.key});
@@ -14,17 +14,26 @@ class MyBottomBar extends StatefulWidget {
 }
 
 class _MyBottomBarState extends State<MyBottomBar> {
-  final List<Widget> _pages = [
-    Home(),
-    Note(),
-    WidgetTree(),
-    Inspo(),
-  ];
-
   int _currentPage = 0;
 
+  // Una Key diversa per ogni "visita" alla tab Home forza la ricostruzione
+
+  int _homeRebuildCount = 0;
+
+  List<Widget> get _pages => [
+    Home(key: ValueKey('home_$_homeRebuildCount')),
+    const Note(),
+    const Profilo(),
+    const Inspo(),
+  ];
+
   void _onTap(int index) {
-    setState(() => _currentPage = index);
+    setState(() {
+      if (index == 0 && _currentPage != 0) {
+        _homeRebuildCount++;
+      }
+      _currentPage = index;
+    });
   }
 
   @override

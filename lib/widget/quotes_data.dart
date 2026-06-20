@@ -117,3 +117,4 @@ Quote getQuoteOfDay() {
   final dayOfYear = DateTime.now().difference(DateTime(DateTime.now().year, 1, 1)).inDays;
   return allQuotes[dayOfYear % allQuotes.length];
 }
+

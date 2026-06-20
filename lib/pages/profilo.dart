@@ -115,7 +115,6 @@ class _ProfiloState extends State<Profilo> {
 
             const SizedBox(height: 32),
 
-            // ── Obiettivo corrente ────────────────────────────────────────────
             if (_obiettivo.isNotEmpty) ...[
               Text(
                 'Il mio obiettivo',
@@ -154,7 +153,6 @@ class _ProfiloState extends State<Profilo> {
               ),
               const SizedBox(height: 32),
             ],
-            // ─────────────────────────────────────────────────────────────────
 
             Text(
               'Account',
@@ -194,7 +192,6 @@ class _ProfiloState extends State<Profilo> {
             ),
             const SizedBox(height: 12),
 
-            // ── Tile obiettivo ────────────────────────────────────────────────
             _ActionTile(
               icon: Icons.flag_rounded,
               label: 'Il mio obiettivo',
@@ -211,7 +208,6 @@ class _ProfiloState extends State<Profilo> {
               },
             ),
             const SizedBox(height: 10),
-            // ─────────────────────────────────────────────────────────────────
 
             _ActionTile(
               icon: Icons.lock_outline,
