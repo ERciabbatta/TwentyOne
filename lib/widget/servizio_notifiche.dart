@@ -20,22 +20,6 @@ class NotificationService {
   static const String _keyMotivazionali = 'notifiche_motivazionali';
   static const String _keyCheckIn = 'notifiche_checkin';
   static const int _idCheckIn = 888888;
-  static const String _keyCheckInOra = 'notifiche_checkin_ora';
-  static const String _keyCheckInMinuto = 'notifiche_checkin_minuto';
-
-  Future<TimeOfDay> getCheckInTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    final ora = prefs.getInt(_keyCheckInOra) ?? 22;
-    final minuto = prefs.getInt(_keyCheckInMinuto) ?? 0;
-    return TimeOfDay(hour: ora, minute: minuto);
-  }
-
-  Future<void> setCheckInTime(TimeOfDay time) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_keyCheckInOra, time.hour);
-    await prefs.setInt(_keyCheckInMinuto, time.minute);
-    await scheduleCheckIn();
-  }
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -274,10 +258,8 @@ class NotificationService {
     if (!attivo) return;
     await cancellaCheckIn();
 
-    final time = await getCheckInTime();
     final now = tz.TZDateTime.now(tz.local);
-    var trigger = tz.TZDateTime(
-        tz.local, now.year, now.month, now.day, time.hour, time.minute);
+    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
 
     if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
       trigger = trigger.add(const Duration(days: 1));

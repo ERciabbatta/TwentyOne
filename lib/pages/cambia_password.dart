@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class CambioPassword extends StatefulWidget {
   const CambioPassword({super.key});
@@ -37,15 +38,16 @@ class _CambioPasswordState extends State<CambioPassword> {
   @override
   Widget build(BuildContext context) {
     final email = Auth().currentUser?.email ?? '';
+    final colors = AppColors.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF3A4A5C), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: colors.textPrimary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -53,7 +55,7 @@ class _CambioPasswordState extends State<CambioPassword> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
       ),
@@ -65,6 +67,7 @@ class _CambioPasswordState extends State<CambioPassword> {
   }
 
   Widget _buildForm(String email) {
+    final colors = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -75,11 +78,11 @@ class _CambioPasswordState extends State<CambioPassword> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEF7),
+              color: colors.surface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.lock_reset_rounded,
-                color: Color(0xFF7A9CC6), size: 36),
+            child: Icon(Icons.lock_reset_rounded,
+                color: colors.accent, size: 36),
           ),
         ),
 
@@ -90,14 +93,14 @@ class _CambioPasswordState extends State<CambioPassword> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 22,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 10),
         Text(
           'Ti invieremo un\'email a:\n$email\n\nClicca il link nell\'email per scegliere una nuova password.',
-          style: const TextStyle(
-            color: Color(0xFF8A9BB5),
+          style: TextStyle(
+            color: colors.textSecondary,
             fontSize: 14,
             height: 1.6,
           ),
@@ -109,12 +112,12 @@ class _CambioPasswordState extends State<CambioPassword> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFE8E8),
+              color: colors.errorBackground,
               borderRadius: BorderRadius.circular(14),
             ),
             child: Text(
               _errore!,
-              style: const TextStyle(color: Color(0xFFE57373), fontSize: 13),
+              style: TextStyle(color: colors.error, fontSize: 13),
             ),
           ),
 
@@ -126,21 +129,21 @@ class _CambioPasswordState extends State<CambioPassword> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFF7A9CC6),
+              color: colors.accent,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
               child: _caricamento
-                  ? const SizedBox(
+                  ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2),
+                    color: colors.textOnAccent, strokeWidth: 2),
               )
-                  : const Text(
+                  : Text(
                 'Invia email di reset',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: colors.textOnAccent,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),
@@ -155,6 +158,7 @@ class _CambioPasswordState extends State<CambioPassword> {
   }
 
   Widget _buildSuccesso(String email) {
+    final colors = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -163,11 +167,11 @@ class _CambioPasswordState extends State<CambioPassword> {
           width: 80,
           height: 80,
           decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
+            color: colors.successBackground,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.mark_email_read_outlined,
-              color: Color(0xFF66BB6A), size: 40),
+          child: Icon(Icons.mark_email_read_outlined,
+              color: colors.success, size: 40),
         ),
         const SizedBox(height: 24),
         Text(
@@ -175,15 +179,15 @@ class _CambioPasswordState extends State<CambioPassword> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 24,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
         Text(
           'Controlla la tua casella (non dimenticare lo spam):\n$email',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF8A9BB5),
+          style: TextStyle(
+            color: colors.textSecondary,
             fontSize: 14,
             height: 1.6,
           ),
@@ -195,14 +199,14 @@ class _CambioPasswordState extends State<CambioPassword> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEF7),
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Torna al profilo',
                 style: TextStyle(
-                  color: Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
                 ),

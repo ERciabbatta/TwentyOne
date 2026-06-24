@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/quotes_data.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class Home extends StatefulWidget {
   Home({super.key});
@@ -160,30 +161,31 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildObiettivoCard(IconData icon, String label, String valore, String sublabel) {
+    final colors = AppColors.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF7),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFD0DCF0),
+              decoration: BoxDecoration(
+                color: colors.surfaceSelected,
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: const Color(0xFF7A9CC6), size: 22),
+              child: Icon(icon, color: colors.accent, size: 22),
             ),
             const SizedBox(height: 12),
             Text(
               sublabel,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 letterSpacing: 1.2,
-                color: Color(0xFF8A9BB5),
+                color: colors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -193,12 +195,12 @@ class _HomeState extends State<Home> {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 40,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
             Text(label,
-                style: const TextStyle(fontSize: 13, color: Color(0xFF8A9BB5))),
+                style: TextStyle(fontSize: 13, color: colors.textSecondary)),
           ],
         ),
       ),
@@ -206,22 +208,23 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildObiettivoStrip() {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8EEF7),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          const Icon(Icons.flag_rounded, color: Color(0xFF7A9CC6), size: 18),
+          Icon(Icons.flag_rounded, color: colors.accent, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               _obiettivo,
-              style: const TextStyle(
-                color: Color(0xFF3A4A5C),
+              style: TextStyle(
+                color: colors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -233,20 +236,21 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildNotaRow(Map<String, dynamic> nota) {
+    final colors = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
         children: [
-          const Text('• ', style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 16)),
+          Text('• ', style: TextStyle(color: colors.textSecondary, fontSize: 16)),
           Text(nota['inizio'] ?? '',
-              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13)),
           const SizedBox(width: 6),
           Expanded(
             child: Text(nota['testo'] ?? '',
-                style: const TextStyle(color: Color(0xFF4A5568), fontSize: 13)),
+                style: TextStyle(color: colors.textPrimary, fontSize: 13)),
           ),
           Text(nota['fine'] ?? '',
-              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13)),
         ],
       ),
     );
@@ -254,6 +258,7 @@ class _HomeState extends State<Home> {
 
   Widget _buildFasciaOraria(IconData icon, String titolo,
       List<Map<String, dynamic>> note, bool showDivider) {
+    final colors = AppColors.of(context);
     return Column(
       children: [
         Padding(
@@ -261,22 +266,22 @@ class _HomeState extends State<Home> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: const Color(0xFF7A9CC6), size: 22),
+              Icon(icon, color: colors.accent, size: 22),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(titolo,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF3A4A5C),
+                          color: colors.textPrimary,
                         )),
                     const SizedBox(height: 8),
                     if (note.isEmpty)
-                      const Text('Nessuna nota',
-                          style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 13))
+                      Text('Nessuna nota',
+                          style: TextStyle(color: colors.textSecondary, fontSize: 13))
                     else
                       ...note.map((nota) => _buildNotaRow(nota)),
                   ],
@@ -285,12 +290,13 @@ class _HomeState extends State<Home> {
             ],
           ),
         ),
-        if (showDivider) const Divider(color: Color(0xFFE2E8F0), thickness: 1),
+        if (showDivider) Divider(color: colors.cardBorder, thickness: 1),
       ],
     );
   }
 
   Widget _buildBannerCompletamento() {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -302,8 +308,8 @@ class _HomeState extends State<Home> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF7A9CC6), Color(0xFF5B7FA8)],
+          gradient: LinearGradient(
+            colors: [colors.accent, colors.accentGradientEnd],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -340,6 +346,7 @@ class _HomeState extends State<Home> {
   }
 
   Widget _buildBannerCheckin() {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -351,20 +358,20 @@ class _HomeState extends State<Home> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF7),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFB8CCE4), width: 1.5),
+          border: Border.all(color: colors.accent.withValues(alpha: 0.4), width: 1.5),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Color(0xFFD0DCF0),
+              decoration: BoxDecoration(
+                color: colors.surfaceSelected,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.nightlight_round,
-                  color: Color(0xFF7A9CC6), size: 22),
+              child: Icon(Icons.nightlight_round,
+                  color: colors.accent, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -376,19 +383,19 @@ class _HomeState extends State<Home> {
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF3A4A5C),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  const Text(
+                  Text(
                     'Come è andata oggi?',
-                    style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                color: Color(0xFF8A9BB5), size: 16),
+            Icon(Icons.arrow_forward_ios_rounded,
+                color: colors.textSecondary, size: 16),
           ],
         ),
       ),
@@ -398,11 +405,12 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final quoteOfDay = getQuoteOfDay();
+    final colors = AppColors.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         actions: [
           IconButton(
@@ -412,8 +420,8 @@ class _HomeState extends State<Home> {
                 MaterialPageRoute(builder: (context) => const Calendario()),
               );
             },
-            icon: const Icon(Icons.calendar_month_outlined,
-                color: Color(0xFF3A4A5C)),
+            icon: Icon(Icons.calendar_month_outlined,
+                color: colors.textPrimary),
           ),
         ],
       ),
@@ -491,23 +499,23 @@ class _HomeState extends State<Home> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         '\u201C',
                         style: TextStyle(
-                            fontSize: 36, color: Color(0xFF7A9CC6), height: 0.8),
+                            fontSize: 36, color: colors.accent, height: 0.8),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         quoteOfDay.text,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF4A5568),
+                          color: colors.textPrimary,
                           letterSpacing: 0.5,
                           height: 1.5,
                         ),
@@ -521,11 +529,11 @@ class _HomeState extends State<Home> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: colors.card,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
+                        color: colors.shadow.withValues(alpha: 0.06),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),

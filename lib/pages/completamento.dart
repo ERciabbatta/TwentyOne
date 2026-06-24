@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 import 'dart:math';
 
 class Completamento extends StatefulWidget {
@@ -120,6 +121,7 @@ class _CompletamentoState extends State<Completamento>
   }
 
   Future<void> _mostraDialogReset() async {
+    final colors = AppColors.of(context);
     final conferma = await showDialog<bool>(
       context: context,
       builder: (ctx) => Dialog(
@@ -127,11 +129,11 @@ class _CompletamentoState extends State<Completamento>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colors.card,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
+                color: colors.shadow.withValues(alpha: 0.06),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -146,14 +148,14 @@ class _CompletamentoState extends State<Completamento>
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Tutti i progressi, i check-in e lo streak verranno azzerati. Sei sicuro?',
                 style: TextStyle(
-                  color: Color(0xFF8A9BB5),
+                  color: colors.textSecondary,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -167,14 +169,14 @@ class _CompletamentoState extends State<Completamento>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8EEF7),
+                          color: colors.surface,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Annulla',
                             style: TextStyle(
-                              color: Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -189,14 +191,14 @@ class _CompletamentoState extends State<Completamento>
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFFE8E8),
+                          color: colors.errorBackground,
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             'Reimposta',
                             style: TextStyle(
-                              color: Color(0xFFE57373),
+                              color: colors.error,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -248,21 +250,22 @@ class _CompletamentoState extends State<Completamento>
   String get _moodLabel => _emojiLabel[_moodMedio.round().clamp(0, 4)];
 
   Widget _buildStatCard(String titolo, String valore, String sottotitolo, {Widget? custom}) {
+    final colors = AppColors.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF7),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
           children: [
             Text(
               titolo,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
                 letterSpacing: 1.2,
-                color: Color(0xFF8A9BB5),
+                color: colors.textSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -272,14 +275,14 @@ class _CompletamentoState extends State<Completamento>
               style: GoogleFonts.playfairDisplay(
                 fontSize: 32,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               sottotitolo,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 11, color: Color(0xFF8A9BB5)),
+              style: TextStyle(fontSize: 11, color: colors.textSecondary),
             ),
           ],
         ),
@@ -289,8 +292,9 @@ class _CompletamentoState extends State<Completamento>
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: Stack(
         children: [
           AnimatedBuilder(
@@ -306,7 +310,7 @@ class _CompletamentoState extends State<Completamento>
             },
           ),
           if (_loading)
-            const Center(child: CircularProgressIndicator(color: Color(0xFF7A9CC6)))
+            Center(child: CircularProgressIndicator(color: colors.accent))
           else
             SafeArea(
               child: FadeTransition(
@@ -322,20 +326,20 @@ class _CompletamentoState extends State<Completamento>
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8EEF7),
+                            color: colors.surface,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF6B8CAE).withValues(alpha: 0.3),
+                                color: colors.accent.withValues(alpha: 0.3),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
                             ],
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.emoji_events_rounded,
                             size: 52,
-                            color: Color(0xFF4A7BA7),
+                            color: colors.accent,
                           ),
                         ),
                       ),
@@ -345,16 +349,16 @@ class _CompletamentoState extends State<Completamento>
                         style: GoogleFonts.playfairDisplay(
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2C3E50),
+                          color: colors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
+                      Text(
                         'Hai completato il tuo percorso di 21 giorni.\nHai costruito qualcosa di straordinario.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Color(0xFF7F8C8D),
+                          color: colors.textSecondary,
                           height: 1.6,
                         ),
                       ),
@@ -363,8 +367,8 @@ class _CompletamentoState extends State<Completamento>
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF7A9CC6), Color(0xFF5B7FA8)],
+                          gradient: LinearGradient(
+                            colors: [colors.accent, colors.accentGradientEnd],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -378,17 +382,17 @@ class _CompletamentoState extends State<Completamento>
                               style: GoogleFonts.playfairDisplay(
                                 fontSize: 56,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: colors.textOnAccent,
                               ),
                             ),
                             const SizedBox(width: 16),
-                            const Column(
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'giorni',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: colors.textOnAccent,
                                     fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -396,7 +400,7 @@ class _CompletamentoState extends State<Completamento>
                                 Text(
                                   'di costanza',
                                   style: TextStyle(
-                                    color: Colors.white70,
+                                    color: colors.textOnAccent.withValues(alpha: 0.7),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -414,7 +418,7 @@ class _CompletamentoState extends State<Completamento>
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                             ),
                           ),
                         ),
@@ -465,7 +469,7 @@ class _CompletamentoState extends State<Completamento>
                         child: TextButton(
                           onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(
-                            backgroundColor: const Color(0xFF4A7BA7),
+                            backgroundColor: colors.accentGradientEnd,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -475,7 +479,7 @@ class _CompletamentoState extends State<Completamento>
                             'Continua',
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 16,
-                              color: Colors.white,
+                              color: colors.textOnAccent,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -487,7 +491,7 @@ class _CompletamentoState extends State<Completamento>
                         child: TextButton(
                           onPressed: _mostraDialogReset,
                           style: TextButton.styleFrom(
-                            backgroundColor: const Color(0xFFE8EEF7),
+                            backgroundColor: colors.surface,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -497,7 +501,7 @@ class _CompletamentoState extends State<Completamento>
                             'Ricomincia il percorso',
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 16,
-                              color: const Color(0xFF8A9BB5),
+                              color: colors.textSecondary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),

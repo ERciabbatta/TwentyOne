@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class OnboardingObiettivo extends StatefulWidget {
 
@@ -95,16 +96,17 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
 
       appBar: widget.modifica
           ? AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF3A4A5C), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: colors.textPrimary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -112,7 +114,7 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
       )
@@ -129,12 +131,12 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                 child: Container(
                   width: 72,
                   height: 72,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8EEF7),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.flag_rounded,
-                      color: Color(0xFF7A9CC6), size: 36),
+                  child: Icon(Icons.flag_rounded,
+                      color: colors.accent, size: 36),
                 ),
               ),
               const SizedBox(height: 24),
@@ -148,7 +150,7 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3A4A5C),
+                    color: colors.textPrimary,
                     height: 1.3,
                   ),
                 ),
@@ -160,8 +162,8 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                       ? 'Puoi cambiarlo quando vuoi.'
                       : 'Scegli un\'abitudine concreta e tienila\ncostante per 21 giorni.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFF8A9BB5),
+                  style: TextStyle(
+                    color: colors.textSecondary,
                     fontSize: 14,
                     height: 1.6,
                   ),
@@ -175,24 +177,24 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                 maxLength: 80,
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
-                style: const TextStyle(
-                  color: Color(0xFF3A4A5C),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 15,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Es. Meditare ogni mattina',
-                  hintStyle: const TextStyle(color: Color(0xFFB0BEC5)),
-                  counterStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 12),
+                  hintStyle: TextStyle(color: colors.textSecondary),
+                  counterStyle: TextStyle(color: colors.textSecondary, fontSize: 12),
                   filled: true,
-                  fillColor: const Color(0xFFE8EEF7),
+                  fillColor: colors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(
-                        color: Color(0xFF7A9CC6), width: 2),
+                    borderSide: BorderSide(
+                        color: colors.accent, width: 2),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 14),
@@ -206,8 +208,8 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                 const SizedBox(height: 6),
                 Text(
                   _errore!,
-                  style: const TextStyle(
-                      color: Color(0xFFE57373), fontSize: 13),
+                  style: TextStyle(
+                      color: colors.error, fontSize: 13),
                 ),
               ],
 
@@ -215,8 +217,8 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
 
               Text(
                 'Oppure scegli uno di questi:',
-                style: const TextStyle(
-                    color: Color(0xFF8A9BB5), fontSize: 13),
+                style: TextStyle(
+                    color: colors.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: 10),
               Wrap(
@@ -232,15 +234,15 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8EEF7),
+                        color: colors.surface,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                            color: const Color(0xFFD0DCF0), width: 1),
+                            color: colors.surfaceSelected, width: 1),
                       ),
                       child: Text(
                         s,
-                        style: const TextStyle(
-                          color: Color(0xFF3A4A5C),
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 13,
                         ),
                       ),
@@ -258,22 +260,22 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7A9CC6),
+                    color: colors.accent,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Center(
                     child: _caricamento
-                        ? const SizedBox(
+                        ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          color: Colors.white, strokeWidth: 2
+                          color: colors.textOnAccent, strokeWidth: 2
                       ),
                     )
                         : Text(
                       widget.modifica ? 'Salva' : 'Inizia i 21 giorni →',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colors.textOnAccent,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),

@@ -9,6 +9,11 @@ import 'package:twentyone/pages/obiettivo.dart';
 import 'package:twentyone/widget/MyBottomBar.dart';
 import 'package:twentyone/widget/servizio_notifiche.dart';
 import 'package:twentyone/widget/firebase_options.dart';
+import 'package:twentyone/widget/app_theme.dart';
+import 'package:twentyone/widget/theme_provider.dart';
+import 'package:twentyone/widget/app_colors.dart';
+
+final themeProvider = ThemeProvider();
 
 void main() async {
   runZonedGuarded(() async {
@@ -16,6 +21,8 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    await themeProvider.caricaPreferenza();
 
     final notifService = NotificationService();
     await notifService.init();
@@ -44,13 +51,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TwentyOne',
-      navigatorKey: NotificationService.navigatorKey,
-      routes: {
-        '/checkin': (context) => const CheckIn(),
+    return ListenableBuilder(
+      listenable: themeProvider,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'TwentyOne',
+          navigatorKey: NotificationService.navigatorKey,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: themeProvider.themeMode,
+          routes: {
+            '/checkin': (context) => const CheckIn(),
+          },
+          home: const AuthGate(),
+        );
       },
-      home: const AuthGate(),
     );
   }
 }
@@ -138,10 +153,11 @@ class _Splash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.white,
+    final colors = AppColors.of(context);
+    return Scaffold(
+      backgroundColor: colors.background,
       body: Center(
-        child: CircularProgressIndicator(color: Color(0xFF7A9CC6)),
+        child: CircularProgressIndicator(color: colors.accent),
       ),
     );
   }

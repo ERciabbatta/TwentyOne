@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class LoginRegister extends StatefulWidget {
   final bool startAsLogin;
@@ -61,23 +62,24 @@ class _LoginRegisterState extends State<LoginRegister> {
     required TextEditingController controller,
     bool obscure = false,
   }) {
+    final colors = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFE8EEF7),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
-        style: const TextStyle(
-          color: Color(0xFF3A4A5C),
+        style: TextStyle(
+          color: colors.textPrimary,
           fontSize: 15,
         ),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, color: const Color(0xFF7A9CC6), size: 20),
+          prefixIcon: Icon(icon, color: colors.accent, size: 20),
           labelText: label,
-          labelStyle: const TextStyle(
-            color: Color(0xFF8A9BB5),
+          labelStyle: TextStyle(
+            color: colors.textSecondary,
             fontSize: 14,
           ),
           border: InputBorder.none,
@@ -90,8 +92,9 @@ class _LoginRegisterState extends State<LoginRegister> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -104,14 +107,14 @@ class _LoginRegisterState extends State<LoginRegister> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 32,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 isLogin ? 'Accedi per continuare' : 'Registrati per iniziare',
-                style: const TextStyle(
-                  color: Color(0xFF8A9BB5),
+                style: TextStyle(
+                  color: colors.textSecondary,
                   fontSize: 15,
                 ),
               ),
@@ -142,13 +145,13 @@ class _LoginRegisterState extends State<LoginRegister> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFE8E8),
+                    color: colors.errorBackground,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
                     errorMessage!,
-                    style: const TextStyle(
-                      color: Color(0xFFE57373),
+                    style: TextStyle(
+                      color: colors.error,
                       fontSize: 13,
                     ),
                   ),
@@ -163,11 +166,11 @@ class _LoginRegisterState extends State<LoginRegister> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7A9CC6),
+                    color: colors.accent,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7A9CC6).withValues(alpha: 0.3),
+                        color: colors.accent.withValues(alpha: 0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 6),
                       ),
@@ -179,7 +182,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                        color: colors.textOnAccent,
                       ),
                     ),
                   ),
@@ -198,8 +201,8 @@ class _LoginRegisterState extends State<LoginRegister> {
                     isLogin
                         ? 'Non hai un account? Registrati'
                         : 'Hai già un account? Accedi',
-                    style: const TextStyle(
-                      color: Color(0xFF7A9CC6),
+                    style: TextStyle(
+                      color: colors.accent,
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),

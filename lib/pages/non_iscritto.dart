@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/pages/login_register.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class NonIscritto extends StatelessWidget {
   const NonIscritto({super.key});
@@ -18,8 +19,9 @@ class NonIscritto extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -29,13 +31,13 @@ class NonIscritto extends StatelessWidget {
               Container(
                 width: 80,
                 height: 80,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8EEF7),
+                decoration: BoxDecoration(
+                  color: colors.surface,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.auto_awesome_rounded,
-                  color: Color(0xFF7A9CC6),
+                  color: colors.accent,
                   size: 36,
                 ),
               ),
@@ -45,16 +47,16 @@ class NonIscritto extends StatelessWidget {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 28,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Inizia il tuo percorso di 21 giorni e trasforma le tue intenzioni in abitudini reali.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF8A9BB5),
+                  color: colors.textSecondary,
                   height: 1.6,
                 ),
               ),
@@ -65,14 +67,14 @@ class NonIscritto extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7A9CC6),
+                    color: colors.accent,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Accedi',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textOnAccent,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -87,14 +89,14 @@ class NonIscritto extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Registrati',
                       style: TextStyle(
-                        color: Color(0xFF3A4A5C),
+                        color: colors.textPrimary,
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),

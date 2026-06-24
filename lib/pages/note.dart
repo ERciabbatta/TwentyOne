@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/crea_nota.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class Note extends StatefulWidget {
   const Note({super.key});
@@ -34,8 +35,9 @@ class _NoteState extends State<Note> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -52,7 +54,7 @@ class _NoteState extends State<Note> {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3A4A5C),
+                    color: colors.textPrimary,
                   ),
                 ),
                 IconButton(
@@ -64,10 +66,10 @@ class _NoteState extends State<Note> {
                       ),
                     );
                   },
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.add_circle_rounded,
                     size: 40,
-                    color: Color(0xFF7A9CC6),
+                    color: colors.accent,
                   ),
                 ),
               ],
@@ -87,8 +89,8 @@ class _NoteState extends State<Note> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
                       color: selezionato
-                          ? const Color(0xFF7A9CC6)
-                          : const Color(0xFFE8EEF7),
+                          ? colors.accent
+                          : colors.surface,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Column(
@@ -99,8 +101,8 @@ class _NoteState extends State<Note> {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: selezionato
-                                ? Colors.white
-                                : const Color(0xFF8A9BB5),
+                                ? colors.textOnAccent
+                                : colors.textSecondary,
                           ),
                         ),
                       ],
@@ -135,7 +137,7 @@ class _NoteState extends State<Note> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: note.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final nota = note[index].data() as Map<String, dynamic>;
                     final docId = note[index].id;
@@ -153,18 +155,20 @@ class _NoteState extends State<Note> {
   }
 
   Widget _nessunaNota() {
-    return const Center(
+    final colors = AppColors.of(context);
+    return Center(
       child: Padding(
-        padding: EdgeInsets.only(top: 40),
+        padding: const EdgeInsets.only(top: 40),
         child: Text(
           'Nessuna nota per questo giorno',
-          style: TextStyle(color: Color(0xFF8A9BB5), fontSize: 15),
+          style: TextStyle(color: colors.textSecondary, fontSize: 15),
         ),
       ),
     );
   }
 
   Widget _buildNotaCard(Map<String, dynamic> nota, String docId) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onLongPress: () async {
         final conferma = await showDialog<bool>(
@@ -174,11 +178,11 @@ class _NoteState extends State<Note> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.card,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: colors.shadow.withValues(alpha: 0.06),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -193,14 +197,14 @@ class _NoteState extends State<Note> {
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF3A4A5C),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
+                  Text(
                     'Sei sicuro di voler eliminare questa nota?',
                     style: TextStyle(
-                      color: Color(0xFF8A9BB5),
+                      color: colors.textSecondary,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -214,14 +218,14 @@ class _NoteState extends State<Note> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8EEF7),
+                              color: colors.surface,
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Text(
                                 'Annulla',
                                 style: TextStyle(
-                                  color: Color(0xFF3A4A5C),
+                                  color: colors.textPrimary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -236,14 +240,14 @@ class _NoteState extends State<Note> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFE8E8),
+                              color: colors.errorBackground,
                               borderRadius: BorderRadius.circular(14),
                             ),
-                            child: const Center(
+                            child: Center(
                               child: Text(
                                 'Elimina',
                                 style: TextStyle(
-                                  color: Color(0xFFE57373),
+                                  color: colors.error,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -281,23 +285,23 @@ class _NoteState extends State<Note> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF7),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            const Icon(Icons.access_time, size: 16, color: Color(0xFF8A9BB5)),
+            Icon(Icons.access_time, size: 16, color: colors.textSecondary),
             const SizedBox(width: 6),
             Text(
               nota['inizio'] ?? '',
-              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 nota['testo'] ?? '',
-                style: const TextStyle(
-                  color: Color(0xFF3A4A5C),
+                style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -305,7 +309,7 @@ class _NoteState extends State<Note> {
             ),
             Text(
               nota['fine'] ?? '',
-              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13),
             ),
           ],
         ),

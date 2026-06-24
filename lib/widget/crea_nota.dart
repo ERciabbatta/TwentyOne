@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class CreaNota extends StatefulWidget {
   final int giornoPreselezionato;
@@ -59,10 +60,11 @@ class _CreaNotaState extends State<CreaNota> {
 
   void _mostraErrore(BuildContext context, String messaggio) {
     if (!context.mounted) return;
+    final colors = AppColors.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(messaggio),
-        backgroundColor: const Color(0xFFE57373),
+        backgroundColor: colors.error,
       ),
     );
   }
@@ -126,9 +128,9 @@ class _CreaNotaState extends State<CreaNota> {
       if (siSovrappone) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Orario sovrapposto a una nota esistente.'),
-              backgroundColor: Color(0xFF7A9CC6),
+            SnackBar(
+              content: const Text('Orario sovrapposto a una nota esistente.'),
+              backgroundColor: AppColors.of(context).accent,
             ),
           );
         }
@@ -156,6 +158,7 @@ class _CreaNotaState extends State<CreaNota> {
     required int max,
     required ValueChanged<int> onChanged,
   }) {
+    final colors = AppColors.of(context);
     final controller = FixedExtentScrollController(initialItem: valore);
     return SizedBox(
       width: 64,
@@ -178,8 +181,8 @@ class _CreaNotaState extends State<CreaNota> {
                   fontSize: selezionato ? 26 : 18,
                   fontWeight: selezionato ? FontWeight.w600 : FontWeight.w400,
                   color: selezionato
-                      ? const Color(0xFF3A4A5C)
-                      : const Color(0xFFB8C8DA),
+                      ? colors.textPrimary
+                      : colors.textSecondary.withValues(alpha: 0.5),
                 ),
               ),
             );
@@ -190,13 +193,14 @@ class _CreaNotaState extends State<CreaNota> {
   }
 
   Widget _inlinePicker() {
+    final colors = AppColors.of(context);
     return Column(
       children: [
         const SizedBox(height: 16),
         Text(
           _pickerAperto == 'inizio' ? 'Orario di inizio' : 'Orario di fine',
-          style: const TextStyle(
-            color: Color(0xFF8A9BB5),
+          style: TextStyle(
+            color: colors.textSecondary,
             fontSize: 13,
             letterSpacing: 0.4,
           ),
@@ -205,7 +209,7 @@ class _CreaNotaState extends State<CreaNota> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8EEF7),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -223,7 +227,7 @@ class _CreaNotaState extends State<CreaNota> {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 28,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF7A9CC6),
+                    color: colors.accent,
                   ),
                 ),
               ),
@@ -244,14 +248,14 @@ class _CreaNotaState extends State<CreaNota> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
+                    color: colors.surface,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Annulla',
                       style: TextStyle(
-                        color: Color(0xFF3A4A5C),
+                        color: colors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -266,14 +270,14 @@ class _CreaNotaState extends State<CreaNota> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7A9CC6),
+                    color: colors.accent,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'Conferma',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colors.textOnAccent,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -289,16 +293,17 @@ class _CreaNotaState extends State<CreaNota> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colors.card,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: colors.shadow.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -313,7 +318,7 @@ class _CreaNotaState extends State<CreaNota> {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
 
@@ -322,29 +327,29 @@ class _CreaNotaState extends State<CreaNota> {
 
               TextField(
                 controller: _controllerTesto,
-                style: const TextStyle(color: Color(0xFF3A4A5C)),
+                style: TextStyle(color: colors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Testo',
-                  labelStyle: const TextStyle(color: Color(0xFF8A9BB5)),
+                  labelStyle: TextStyle(color: colors.textSecondary),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: colors.cardBorder),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF7A9CC6)),
+                    borderSide: BorderSide(color: colors.accent),
                   ),
                   filled: true,
-                  fillColor: const Color(0xFFE8EEF7),
+                  fillColor: colors.surface,
                 ),
               ),
 
               const SizedBox(height: 16),
 
-              const Text(
+              Text(
                 'Giorni',
                 style: TextStyle(
-                  color: Color(0xFF8A9BB5),
+                  color: colors.textSecondary,
                   fontSize: 13,
                   letterSpacing: 0.4,
                 ),
@@ -362,8 +367,8 @@ class _CreaNotaState extends State<CreaNota> {
                       height: 36,
                       decoration: BoxDecoration(
                         color: selezionato
-                            ? const Color(0xFF7A9CC6)
-                            : const Color(0xFFE8EEF7),
+                            ? colors.accent
+                            : colors.surface,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
@@ -373,8 +378,8 @@ class _CreaNotaState extends State<CreaNota> {
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: selezionato
-                                ? Colors.white
-                                : const Color(0xFF8A9BB5),
+                                ? colors.textOnAccent
+                                : colors.textSecondary,
                           ),
                         ),
                       ),
@@ -393,15 +398,15 @@ class _CreaNotaState extends State<CreaNota> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8EEF7),
+                        color: colors.surface,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             'Inizio',
                             style: TextStyle(
-                              color: Color(0xFF8A9BB5),
+                              color: colors.textSecondary,
                               fontSize: 12,
                               letterSpacing: 0.5,
                             ),
@@ -412,28 +417,28 @@ class _CreaNotaState extends State<CreaNota> {
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.w400,
-                              color: const Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const Icon(Icons.arrow_forward, color: Color(0xFF7A9CC6), size: 22),
+                  Icon(Icons.arrow_forward, color: colors.accent, size: 22),
                   GestureDetector(
                     onTap: () => _apriPicker('fine'),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE8EEF7),
+                        color: colors.surface,
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Column(
                         children: [
-                          const Text(
+                          Text(
                             'Fine',
                             style: TextStyle(
-                              color: Color(0xFF8A9BB5),
+                              color: colors.textSecondary,
                               fontSize: 12,
                               letterSpacing: 0.5,
                             ),
@@ -444,7 +449,7 @@ class _CreaNotaState extends State<CreaNota> {
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 22,
                               fontWeight: FontWeight.w400,
-                              color: const Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                             ),
                           ),
                         ],
@@ -461,8 +466,8 @@ class _CreaNotaState extends State<CreaNota> {
                 child: ElevatedButton(
                   onPressed: () => _salvaNota(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7A9CC6),
-                    foregroundColor: Colors.white,
+                    backgroundColor: colors.accent,
+                    foregroundColor: colors.textOnAccent,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),

@@ -3,13 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/quotes_data.dart';
-
-const Color _bgColor = Color(0xFFF7F9FC);
-const Color _cardBlue = Color(0xFFD6E4F5);
-const Color _accentBlue = Color(0xFF7A9CC6);
-const Color _textDark = Color(0xFF1E2A3A);
-const Color _textMuted = Color(0xFF8A96A8);
-const Color _white = Colors.white;
+import 'package:twentyone/widget/app_colors.dart';
 
 const List<String> _categories = ['Tutte', 'Disciplina', 'Abitudini', 'Mindset', 'Cambiamento', 'Coraggio', 'Gratitudine'];
 
@@ -80,8 +74,9 @@ class _InspoState extends State<Inspo> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: _bgColor,
+      backgroundColor: colors.background,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -96,7 +91,7 @@ class _InspoState extends State<Inspo> {
                       style: GoogleFonts.playfairDisplay(
                         fontSize: 32,
                         fontWeight: FontWeight.w600,
-                        color: _textDark,
+                        color: colors.textPrimary,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -105,7 +100,7 @@ class _InspoState extends State<Inspo> {
                       'Una citazione per ogni giorno del percorso',
                       style: GoogleFonts.lato(
                         fontSize: 13,
-                        color: _textMuted,
+                        color: colors.textSecondary,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -121,7 +116,7 @@ class _InspoState extends State<Inspo> {
                       style: GoogleFonts.lato(
                         fontSize: 11,
                         letterSpacing: 2,
-                        color: _textMuted,
+                        color: colors.textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -176,11 +171,15 @@ class _FeaturedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFC9D8F0), Color(0xFFDBE6F8)],
+        gradient: LinearGradient(
+          colors: [
+            colors.accent.withValues(alpha: 0.35),
+            colors.accentGradientEnd.withValues(alpha: 0.35),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -195,7 +194,7 @@ class _FeaturedCard extends StatelessWidget {
               '\u201C',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 120,
-                color: Colors.white.withValues(alpha: 0.35),
+                color: colors.textOnAccent.withValues(alpha: 0.35),
                 height: 1,
               ),
             ),
@@ -210,7 +209,7 @@ class _FeaturedCard extends StatelessWidget {
                   style: GoogleFonts.lato(
                     fontSize: 10,
                     letterSpacing: 2,
-                    color: const Color(0xFF6A80A0),
+                    color: colors.textSecondary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -220,7 +219,7 @@ class _FeaturedCard extends StatelessWidget {
                   style: GoogleFonts.playfairDisplay(
                     fontSize: 18,
                     height: 1.6,
-                    color: _textDark,
+                    color: colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -231,7 +230,7 @@ class _FeaturedCard extends StatelessWidget {
                       '— ${quote.author}',
                       style: GoogleFonts.lato(
                         fontSize: 12,
-                        color: const Color(0xFF6A80A0),
+                        color: colors.textSecondary,
                         letterSpacing: 0.4,
                       ),
                     ),
@@ -240,14 +239,14 @@ class _FeaturedCard extends StatelessWidget {
                       child: Container(
                         width: 36,
                         height: 36,
-                        decoration: const BoxDecoration(
-                          color: _white,
+                        decoration: BoxDecoration(
+                          color: colors.card,
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                           size: 18,
-                          color: isFavorite ? const Color(0xFFE57373) : _accentBlue,
+                          color: isFavorite ? colors.error : colors.accent,
                         ),
                       ),
                     ),
@@ -275,6 +274,7 @@ class _CategoryPills extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -288,11 +288,11 @@ class _CategoryPills extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? _accentBlue : _white,
+                  color: isSelected ? colors.accent : colors.card,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: colors.shadow.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 1),
                     ),
@@ -302,7 +302,7 @@ class _CategoryPills extends StatelessWidget {
                   c,
                   style: GoogleFonts.lato(
                     fontSize: 12,
-                    color: isSelected ? _white : const Color(0xFF5A6A80),
+                    color: isSelected ? colors.textOnAccent : colors.textSecondary,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -328,13 +328,14 @@ class _QuoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: _white,
+        color: colors.card,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: colors.shadow.withValues(alpha: 0.04),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -349,7 +350,7 @@ class _QuoteCard extends StatelessWidget {
               '\u201C',
               style: GoogleFonts.playfairDisplay(
                 fontSize: 40,
-                color: _cardBlue,
+                color: colors.surfaceSelected,
                 height: 0.8,
               ),
             ),
@@ -359,7 +360,7 @@ class _QuoteCard extends StatelessWidget {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 15,
                 height: 1.65,
-                color: const Color(0xFF2C3E55),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 14),
@@ -370,7 +371,7 @@ class _QuoteCard extends StatelessWidget {
                   '— ${quote.author}',
                   style: GoogleFonts.lato(
                     fontSize: 11,
-                    color: _textMuted,
+                    color: colors.textSecondary,
                     letterSpacing: 0.4,
                   ),
                 ),
@@ -380,13 +381,13 @@ class _QuoteCard extends StatelessWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: _bgColor,
+                      color: colors.surface,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                       size: 14,
-                      color: isFavorite ? const Color(0xFFE57373) : _textMuted,
+                      color: isFavorite ? colors.error : colors.textSecondary,
                     ),
                   ),
                 ),

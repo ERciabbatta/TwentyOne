@@ -6,6 +6,8 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/pages/cambia_password.dart';
 import 'package:twentyone/pages/notifiche.dart';
 import 'package:twentyone/pages/obiettivo.dart';
+import 'package:twentyone/widget/app_colors.dart';
+import 'package:twentyone/main.dart';
 
 class Profilo extends StatefulWidget {
   const Profilo({super.key});
@@ -17,12 +19,6 @@ class Profilo extends StatefulWidget {
 class _ProfiloState extends State<Profilo> {
   final User? user = Auth().currentUser;
   String _obiettivo = '';
-  String get _initials {
-    final displayName = user?.displayName ?? 'Utente';
-    return displayName.isNotEmpty
-        ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
-        : '?';
-  }
 
   @override
   void initState() {
@@ -30,117 +26,15 @@ class _ProfiloState extends State<Profilo> {
     _caricaObiettivo();
   }
 
-  String _avatarColore = '0xFF7A9CC6';
-  String _avatarEmoji = '';
-
   Future<void> _caricaObiettivo() async {
     final uid = user?.uid;
     if (uid == null) return;
-    final doc = await FirebaseFirestore.instance.collection('utenti').doc(uid).get();
-    final data = doc.data();
-    if (mounted) setState(() {
-      _obiettivo = data?['obiettivo'] as String? ?? '';
-      _avatarColore = data?['avatarColore'] as String? ?? '0xFF7A9CC6';
-      _avatarEmoji = data?['avatarEmoji'] as String? ?? '';
-    });
-  }
-
-  Future<void> _mostraPickerAvatar() async {
-    final colori = [
-      '0xFF7A9CC6', '0xFF81C784', '0xFFE57373',
-      '0xFFFFB74D', '0xFFBA68C8', '0xFF4DB6AC',
-      '0xFF90A4AE', '0xFFF06292',
-    ];
-    final emoji = ['', '🌙', '⭐', '🌿', '🔥', '🎯', '💎', '🦋', '🌊', '🍀'];
-
-    await showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Personalizza avatar',
-                style: GoogleFonts.playfairDisplay(
-                    fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF3A4A5C))),
-            const SizedBox(height: 20),
-            Text('Colore', style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 10,
-              children: colori.map((c) {
-                final selected = c == _avatarColore;
-                return GestureDetector(
-                  onTap: () => _salvaAvatar(c, _avatarEmoji),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: Color(int.parse(c)),
-                      shape: BoxShape.circle,
-                      border: selected
-                          ? Border.all(color: const Color(0xFF3A4A5C), width: 2.5)
-                          : null,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-            Text('Emoji', style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              children: emoji.map((e) {
-                final selected = e == _avatarEmoji;
-                return GestureDetector(
-                  onTap: () => _salvaAvatar(_avatarColore, e),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: selected ? const Color(0xFFE8EEF7) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Center(
-                      child: e.isEmpty
-                          ? Text(_initials,
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: selected
-                                  ? const Color(0xFF3A4A5C)
-                                  : const Color(0xFF8A9BB5)))
-                          : Text(e, style: const TextStyle(fontSize: 22)),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 8),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _salvaAvatar(String colore, String emoji) async {
-    setState(() {
-      _avatarColore = colore;
-      _avatarEmoji = emoji;
-    });
-    Navigator.pop(context);
-    final uid = user?.uid;
-    if (uid == null) return;
-    await FirebaseFirestore.instance.collection('utenti').doc(uid).update({
-      'avatarColore': colore,
-      'avatarEmoji': emoji,
-    });
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .get();
+    final ob = doc.data()?['obiettivo'] as String? ?? '';
+    if (mounted) setState(() => _obiettivo = ob);
   }
 
   Future<void> signOut() async {
@@ -155,8 +49,9 @@ class _ProfiloState extends State<Profilo> {
         ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
         : '?';
 
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -169,7 +64,7 @@ class _ProfiloState extends State<Profilo> {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 28,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
 
@@ -178,32 +73,27 @@ class _ProfiloState extends State<Profilo> {
             Center(
               child: Column(
                 children: [
-                  GestureDetector(
-                    onTap: _mostraPickerAvatar,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Color(int.parse(_avatarColore)),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(int.parse(_avatarColore)).withValues(alpha: 0.3),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: _avatarEmoji.isNotEmpty
-                            ? Text(_avatarEmoji, style: const TextStyle(fontSize: 32))
-                            : Text(
-                          initials,
-                          style: GoogleFonts.playfairDisplay(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: colors.accent,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: colors.accent.withValues(alpha: 0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        initials,
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textOnAccent,
                         ),
                       ),
                     ),
@@ -214,13 +104,13 @@ class _ProfiloState extends State<Profilo> {
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 20,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF3A4A5C),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     email,
-                    style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 14),
+                    style: TextStyle(color: colors.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
@@ -234,7 +124,7 @@ class _ProfiloState extends State<Profilo> {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -242,19 +132,19 @@ class _ProfiloState extends State<Profilo> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8EEF7),
+                  color: colors.surface,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.flag_rounded,
-                        color: Color(0xFF7A9CC6), size: 20),
+                    Icon(Icons.flag_rounded,
+                        color: colors.accent, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         _obiettivo,
-                        style: const TextStyle(
-                          color: Color(0xFF3A4A5C),
+                        style: TextStyle(
+                          color: colors.textPrimary,
                           fontSize: 15,
                           fontWeight: FontWeight.w500,
                           height: 1.4,
@@ -272,7 +162,7 @@ class _ProfiloState extends State<Profilo> {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -300,7 +190,7 @@ class _ProfiloState extends State<Profilo> {
               style: GoogleFonts.playfairDisplay(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF3A4A5C),
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -340,6 +230,10 @@ class _ProfiloState extends State<Profilo> {
               },
             ),
             const SizedBox(height: 10),
+
+            _ThemeToggleTile(colors: colors),
+            const SizedBox(height: 10),
+
             _ActionTile(
               icon: Icons.info_outline_rounded,
               label: 'Informazioni sull\'app',
@@ -351,11 +245,11 @@ class _ProfiloState extends State<Profilo> {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: colors.card,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: colors.shadow.withValues(alpha: 0.06),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -367,12 +261,12 @@ class _ProfiloState extends State<Profilo> {
                           Container(
                             width: 64,
                             height: 64,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFE8EEF7),
+                            decoration: BoxDecoration(
+                              color: colors.surface,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.auto_awesome_rounded,
-                                color: Color(0xFF7A9CC6), size: 30),
+                            child: Icon(Icons.auto_awesome_rounded,
+                                color: colors.accent, size: 30),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -380,26 +274,26 @@ class _ProfiloState extends State<Profilo> {
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text('Versione 1.3.7',
+                          Text('Versione 1.0.0',
                               style: TextStyle(
-                                  color: Color(0xFF8A9BB5), fontSize: 13)),
+                                  color: colors.textSecondary, fontSize: 13)),
                           const SizedBox(height: 16),
-                          const Divider(color: Color(0xFFE8EEF7)),
+                          Divider(color: colors.surface),
                           const SizedBox(height: 16),
-                          const Text(
+                          Text(
                             'Ogni grande cambiamento inizia con 21 giorni di costanza. Traccia i tuoi progressi e trasforma le tue intenzioni in abitudini reali.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: Color(0xFF8A9BB5), fontSize: 14, height: 1.6),
+                                color: colors.textSecondary, fontSize: 14, height: 1.6),
                           ),
                           const SizedBox(height: 8),
-                          const Text('© 2026 Massimo Minni',
+                          Text('© 2026 Massimo Minni',
                               style: TextStyle(
-                                  color: Color(0xFFB0BEC5), fontSize: 12)),
+                                  color: colors.textSecondary, fontSize: 12)),
                           const SizedBox(height: 24),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
@@ -407,13 +301,13 @@ class _ProfiloState extends State<Profilo> {
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE8EEF7),
+                                color: colors.surface,
                                 borderRadius: BorderRadius.circular(14),
                               ),
-                              child: const Center(
+                              child: Center(
                                 child: Text('Chiudi',
                                     style: TextStyle(
-                                        color: Color(0xFF3A4A5C),
+                                        color: colors.textPrimary,
                                         fontWeight: FontWeight.w600)),
                               ),
                             ),
@@ -437,11 +331,11 @@ class _ProfiloState extends State<Profilo> {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: colors.card,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
+                            color: colors.shadow.withValues(alpha: 0.06),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -456,14 +350,14 @@ class _ProfiloState extends State<Profilo> {
                             style: GoogleFonts.playfairDisplay(
                               fontSize: 20,
                               fontWeight: FontWeight.w600,
-                              color: const Color(0xFF3A4A5C),
+                              color: colors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          Text(
                             'Sei sicuro di voler uscire?',
                             style: TextStyle(
-                                color: Color(0xFF8A9BB5), fontSize: 14, height: 1.5),
+                                color: colors.textSecondary, fontSize: 14, height: 1.5),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -474,13 +368,13 @@ class _ProfiloState extends State<Profilo> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFE8EEF7),
+                                      color: colors.surface,
                                       borderRadius: BorderRadius.circular(14),
                                     ),
-                                    child: const Center(
+                                    child: Center(
                                       child: Text('Annulla',
                                           style: TextStyle(
-                                              color: Color(0xFF3A4A5C),
+                                              color: colors.textPrimary,
                                               fontWeight: FontWeight.w600)),
                                     ),
                                   ),
@@ -493,13 +387,13 @@ class _ProfiloState extends State<Profilo> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFFFE8E8),
+                                      color: colors.errorBackground,
                                       borderRadius: BorderRadius.circular(14),
                                     ),
-                                    child: const Center(
+                                    child: Center(
                                       child: Text('Esci',
                                           style: TextStyle(
-                                              color: Color(0xFFE57373),
+                                              color: colors.error,
                                               fontWeight: FontWeight.w600)),
                                     ),
                                   ),
@@ -518,14 +412,14 @@ class _ProfiloState extends State<Profilo> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFE8E8),
+                  color: colors.errorBackground,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'Esci dall\'account',
                     style: TextStyle(
-                        color: Color(0xFFE57373),
+                        color: colors.error,
                         fontWeight: FontWeight.w600,
                         fontSize: 15),
                   ),
@@ -556,27 +450,75 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8EEF7),
+        color: colors.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFF7A9CC6)),
+          Icon(icon, size: 18, color: colors.accent),
           const SizedBox(width: 12),
           Text(label,
-              style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13)),
+              style: TextStyle(color: colors.textSecondary, fontSize: 13)),
           const Spacer(),
           Text(value,
-              style: const TextStyle(
-                  color: Color(0xFF3A4A5C),
+              style: TextStyle(
+                  color: colors.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500)),
         ],
       ),
+    );
+  }
+}
+
+class _ThemeToggleTile extends StatelessWidget {
+  final AppColors colors;
+
+  const _ThemeToggleTile({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: themeProvider,
+      builder: (context, _) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                themeProvider.isDark
+                    ? Icons.dark_mode_outlined
+                    : Icons.light_mode_outlined,
+                size: 18,
+                color: colors.accent,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('Tema scuro',
+                    style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500)),
+              ),
+              Switch(
+                value: themeProvider.isDark,
+                onChanged: (_) => themeProvider.toggle(),
+                activeThumbColor: colors.accent,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -590,27 +532,28 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFE8EEF7),
+          color: colors.surface,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: const Color(0xFF7A9CC6)),
+            Icon(icon, size: 18, color: colors.accent),
             const SizedBox(width: 12),
             Expanded(
               child: Text(label,
-                  style: const TextStyle(
-                      color: Color(0xFF3A4A5C),
+                  style: TextStyle(
+                      color: colors.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w500)),
             ),
-            const Icon(Icons.chevron_right, size: 18, color: Color(0xFF8A9BB5)),
+            Icon(Icons.chevron_right, size: 18, color: colors.textSecondary),
           ],
         ),
       ),

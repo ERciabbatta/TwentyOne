@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class Calendario extends StatefulWidget {
   const Calendario({super.key});
@@ -52,13 +53,14 @@ class _CalendarioState extends State<Calendario> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF3A4A5C)),
+          icon: Icon(Icons.arrow_back_ios, color: colors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -66,7 +68,7 @@ class _CalendarioState extends State<Calendario> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 22,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
       ),
@@ -76,22 +78,22 @@ class _CalendarioState extends State<Calendario> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colors.card,
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
+                    color: colors.shadow.withValues(alpha: 0.06),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
                 ],
               ),
               child: _caricamento
-                  ? const SizedBox(
+                  ? SizedBox(
                 height: 360,
                 child: Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF7A9CC6),
+                    color: colors.accent,
                     strokeWidth: 2,
                   ),
                 ),
@@ -107,72 +109,72 @@ class _CalendarioState extends State<Calendario> {
                   titleTextStyle: GoogleFonts.playfairDisplay(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF3A4A5C),
+                    color: colors.textPrimary,
                   ),
-                  leftChevronIcon: const Icon(Icons.arrow_back_ios,
-                      color: Color(0xFF7A9CC6), size: 18),
-                  rightChevronIcon: const Icon(Icons.arrow_forward_ios,
-                      color: Color(0xFF7A9CC6), size: 18),
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFE8EEF7),
-                    borderRadius: BorderRadius.only(
+                  leftChevronIcon: Icon(Icons.arrow_back_ios,
+                      color: colors.accent, size: 18),
+                  rightChevronIcon: Icon(Icons.arrow_forward_ios,
+                      color: colors.accent, size: 18),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(20),
                       topRight: Radius.circular(20),
                     ),
                   ),
                 ),
-                daysOfWeekStyle: const DaysOfWeekStyle(
+                daysOfWeekStyle: DaysOfWeekStyle(
                   weekdayStyle:
-                  TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+                  TextStyle(color: colors.textSecondary, fontSize: 13),
                   weekendStyle:
-                  TextStyle(color: Color(0xFF7A9CC6), fontSize: 13),
+                  TextStyle(color: colors.accent, fontSize: 13),
                 ),
                 calendarBuilders: CalendarBuilders(
                   defaultBuilder: (context, day, focusedDay) {
                     if (_haCheckIn(day)) {
                       return _buildGiornoCheckIn(
-                          day, const Color(0xFF66BB6A), Colors.white);
+                          day, colors.success, colors.textOnAccent);
                     }
                     return null;
                   },
                   todayBuilder: (context, day, focusedDay) {
                     if (_haCheckIn(day)) {
                       return _buildGiornoCheckIn(
-                          day, const Color(0xFF4CAF50), Colors.white,
+                          day, colors.success, colors.textOnAccent,
                           bordo: true);
                     }
                     return _buildGiornoCheckIn(
-                        day, const Color(0xFF7A9CC6), Colors.white);
+                        day, colors.accent, colors.textOnAccent);
                   },
                   outsideBuilder: (context, day, focusedDay) =>
                   const SizedBox.shrink(),
                 ),
                 calendarStyle: CalendarStyle(
                   outsideDaysVisible: false,
-                  todayDecoration: const BoxDecoration(
-                    color: Color(0xFF7A9CC6),
+                  todayDecoration: BoxDecoration(
+                    color: colors.accent,
                     shape: BoxShape.circle,
                   ),
-                  todayTextStyle: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
+                  todayTextStyle: TextStyle(
+                      color: colors.textOnAccent, fontWeight: FontWeight.bold),
                   defaultDecoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
+                    color: colors.surface,
                     shape: BoxShape.circle,
                   ),
                   defaultTextStyle:
-                  const TextStyle(color: Color(0xFF3A4A5C)),
+                  TextStyle(color: colors.textPrimary),
                   weekendDecoration: BoxDecoration(
-                    color: const Color(0xFFE8EEF7),
+                    color: colors.surface,
                     shape: BoxShape.circle,
                   ),
                   weekendTextStyle:
-                  const TextStyle(color: Color(0xFF7A9CC6)),
-                  selectedDecoration: const BoxDecoration(
-                    color: Color(0xFFD0DCF0),
+                  TextStyle(color: colors.accent),
+                  selectedDecoration: BoxDecoration(
+                    color: colors.surfaceSelected,
                     shape: BoxShape.circle,
                   ),
                   selectedTextStyle:
-                  const TextStyle(color: Color(0xFF3A4A5C)),
+                  TextStyle(color: colors.textPrimary),
                 ),
               ),
             ),
@@ -183,10 +185,10 @@ class _CalendarioState extends State<Calendario> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _buildVoiceLegenda(
-                      const Color(0xFF66BB6A), 'Check-in completato'),
+                      colors.success, 'Check-in completato'),
                   const SizedBox(width: 20),
                   _buildVoiceLegenda(
-                      const Color(0xFF7A9CC6), 'Oggi'),
+                      colors.accent, 'Oggi'),
                 ],
               ),
           ],
@@ -197,13 +199,14 @@ class _CalendarioState extends State<Calendario> {
 
   Widget _buildGiornoCheckIn(DateTime day, Color sfondo, Color testo,
       {bool bordo = false}) {
+    final colors = AppColors.of(context);
     return Container(
       margin: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: sfondo,
         shape: BoxShape.circle,
         border: bordo
-            ? Border.all(color: const Color(0xFF2E7D32), width: 2)
+            ? Border.all(color: colors.success, width: 2)
             : null,
       ),
       child: Center(
@@ -220,6 +223,7 @@ class _CalendarioState extends State<Calendario> {
   }
 
   Widget _buildVoiceLegenda(Color colore, String etichetta) {
+    final colors = AppColors.of(context);
     return Row(
       children: [
         Container(
@@ -233,8 +237,8 @@ class _CalendarioState extends State<Calendario> {
         const SizedBox(width: 6),
         Text(
           etichetta,
-          style: const TextStyle(
-            color: Color(0xFF8A9BB5),
+          style: TextStyle(
+            color: colors.textSecondary,
             fontSize: 12,
           ),
         ),

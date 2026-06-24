@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
+import 'package:twentyone/widget/app_colors.dart';
 
 class CheckIn extends StatefulWidget {
   const CheckIn({super.key});
@@ -19,11 +20,14 @@ class _CheckInState extends State<CheckIn> {
   int _nuovaStreak = 0;
   bool _streakRotta = false;
 
-  final List<Map<String, dynamic>> _opzioniRoutine = [
-    {'label': 'Sì',      'icon': Icons.check_circle_rounded,  'color': Color(0xFF66BB6A)},
-    {'label': 'In parte','icon': Icons.remove_circle_rounded, 'color': Color(0xFFFFB74D)},
-    {'label': 'No',      'icon': Icons.cancel_rounded,        'color': Color(0xFFE57373)},
-  ];
+  List<Map<String, dynamic>> get _opzioniRoutine {
+    final colors = AppColors.of(context);
+    return [
+      {'label': 'Sì',      'icon': Icons.check_circle_rounded,  'color': colors.success},
+      {'label': 'In parte','icon': Icons.remove_circle_rounded, 'color': colors.warning},
+      {'label': 'No',      'icon': Icons.cancel_rounded,        'color': colors.error},
+    ];
+  }
 
   final List<String> _emoji      = ['😞', '😕', '😐', '🙂', '😄'];
   final List<String> _emojiLabel = ['Male', 'Così così', 'Neutro', 'Bene', 'Ottimo'];
@@ -121,14 +125,15 @@ class _CheckInState extends State<CheckIn> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded,
-              color: Color(0xFF3A4A5C), size: 20),
+          icon: Icon(Icons.arrow_back_ios_new_rounded,
+              color: colors.textPrimary, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -136,7 +141,7 @@ class _CheckInState extends State<CheckIn> {
           style: GoogleFonts.playfairDisplay(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
       ),
@@ -152,6 +157,7 @@ class _CheckInState extends State<CheckIn> {
   }
 
   Widget _buildForm() {
+    final colors = AppColors.of(context);
     final bool pronto = _rispostaRoutine != null && _rispostaMood != null;
 
     return Column(
@@ -162,11 +168,11 @@ class _CheckInState extends State<CheckIn> {
         Center(
           child: Container(
             width: 72, height: 72,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE8EEF7), shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              color: colors.surface, shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.nightlight_round,
-                color: Color(0xFF7A9CC6), size: 36),
+            child: Icon(Icons.nightlight_round,
+                color: colors.accent, size: 36),
           ),
         ),
         const SizedBox(height: 20),
@@ -175,7 +181,7 @@ class _CheckInState extends State<CheckIn> {
             'Come è andata oggi?',
             style: GoogleFonts.playfairDisplay(
               fontSize: 22, fontWeight: FontWeight.w600,
-              color: const Color(0xFF3A4A5C),
+              color: colors.textPrimary,
             ),
           ),
         ),
@@ -183,7 +189,7 @@ class _CheckInState extends State<CheckIn> {
         Center(
           child: Text(
             _dataFormattata(),
-            style: const TextStyle(color: Color(0xFF8A9BB5), fontSize: 13),
+            style: TextStyle(color: colors.textSecondary, fontSize: 13),
           ),
         ),
 
@@ -193,7 +199,7 @@ class _CheckInState extends State<CheckIn> {
           'Hai seguito la tua routine?',
           style: GoogleFonts.playfairDisplay(
             fontSize: 16, fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 14),
@@ -211,7 +217,7 @@ class _CheckInState extends State<CheckIn> {
                   decoration: BoxDecoration(
                     color: selezionato
                         ? (opzione['color'] as Color).withValues(alpha: 0.15)
-                        : const Color(0xFFE8EEF7),
+                        : colors.surface,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: selezionato
@@ -225,7 +231,7 @@ class _CheckInState extends State<CheckIn> {
                       Icon(opzione['icon'] as IconData,
                           color: selezionato
                               ? opzione['color'] as Color
-                              : const Color(0xFF8A9BB5),
+                              : colors.textSecondary,
                           size: 26),
                       const SizedBox(height: 6),
                       Text(
@@ -233,7 +239,7 @@ class _CheckInState extends State<CheckIn> {
                         style: TextStyle(
                           color: selezionato
                               ? opzione['color'] as Color
-                              : const Color(0xFF8A9BB5),
+                              : colors.textSecondary,
                           fontWeight: FontWeight.w600, fontSize: 13,
                         ),
                       ),
@@ -251,7 +257,7 @@ class _CheckInState extends State<CheckIn> {
           'Come ti sei sentito?',
           style: GoogleFonts.playfairDisplay(
             fontSize: 16, fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 14),
@@ -267,12 +273,12 @@ class _CheckInState extends State<CheckIn> {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: selezionato
-                      ? const Color(0xFFD0DCF0)
-                      : const Color(0xFFE8EEF7),
+                      ? colors.surfaceSelected
+                      : colors.surface,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: selezionato
-                        ? const Color(0xFF7A9CC6)
+                        ? colors.accent
                         : Colors.transparent,
                     width: 2,
                   ),
@@ -286,8 +292,8 @@ class _CheckInState extends State<CheckIn> {
                       style: TextStyle(
                         fontSize: 9,
                         color: selezionato
-                            ? const Color(0xFF3A4A5C)
-                            : const Color(0xFF8A9BB5),
+                            ? colors.textPrimary
+                            : colors.textSecondary,
                         fontWeight: selezionato
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -310,8 +316,8 @@ class _CheckInState extends State<CheckIn> {
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
               color: pronto
-                  ? const Color(0xFF7A9CC6)
-                  : const Color(0xFFD0DCF0),
+                  ? colors.accent
+                  : colors.surfaceSelected,
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
@@ -324,7 +330,7 @@ class _CheckInState extends State<CheckIn> {
                   : Text(
                 'Salva check-in',
                 style: TextStyle(
-                  color: pronto ? Colors.white : const Color(0xFF8A9BB5),
+                  color: pronto ? colors.textOnAccent : colors.textSecondary,
                   fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
@@ -337,6 +343,7 @@ class _CheckInState extends State<CheckIn> {
   }
 
   Widget _buildSuccesso() {
+    final colors = AppColors.of(context);
     final bool primoCheckin = _nuovaStreak == 1 && !_streakRotta;
     final bool streakRotta  = _streakRotta && _nuovaStreak == 1;
 
@@ -347,11 +354,11 @@ class _CheckInState extends State<CheckIn> {
 
         Container(
           width: 80, height: 80,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE8F5E9), shape: BoxShape.circle,
+          decoration: BoxDecoration(
+            color: colors.successBackground, shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.check_circle_outline_rounded,
-              color: Color(0xFF66BB6A), size: 44),
+          child: Icon(Icons.check_circle_outline_rounded,
+              color: colors.success, size: 44),
         ),
         const SizedBox(height: 24),
 
@@ -359,7 +366,7 @@ class _CheckInState extends State<CheckIn> {
           'Check-in completato!',
           style: GoogleFonts.playfairDisplay(
             fontSize: 24, fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
@@ -370,8 +377,8 @@ class _CheckInState extends State<CheckIn> {
               ? 'Ottimo inizio. Il viaggio comincia adesso!'
               : 'Ottimo lavoro. Ci vediamo domani.',
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Color(0xFF8A9BB5), fontSize: 14, height: 1.6,
+          style: TextStyle(
+            color: colors.textSecondary, fontSize: 14, height: 1.6,
           ),
         ),
 
@@ -380,7 +387,7 @@ class _CheckInState extends State<CheckIn> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8EEF7),
+            color: colors.surface,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -395,14 +402,14 @@ class _CheckInState extends State<CheckIn> {
                     '$_nuovaStreak ${_nuovaStreak == 1 ? 'giorno' : 'giorni'} di fila',
                     style: GoogleFonts.playfairDisplay(
                       fontSize: 20, fontWeight: FontWeight.w700,
-                      color: const Color(0xFF3A4A5C),
+                      color: colors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     streakRotta ? 'Nuova serie iniziata' : 'Continua così!',
-                    style: const TextStyle(
-                      color: Color(0xFF8A9BB5), fontSize: 12,
+                    style: TextStyle(
+                      color: colors.textSecondary, fontSize: 12,
                     ),
                   ),
                 ],
@@ -419,14 +426,14 @@ class _CheckInState extends State<CheckIn> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEF7),
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Torna indietro',
                 style: TextStyle(
-                  color: Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
@@ -439,32 +446,33 @@ class _CheckInState extends State<CheckIn> {
   }
 
   Widget _buildGiaCompletato() {
+    final colors = AppColors.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 60),
         Container(
           width: 80, height: 80,
-          decoration: const BoxDecoration(
-            color: Color(0xFFE8EEF7), shape: BoxShape.circle,
+          decoration: BoxDecoration(
+            color: colors.surface, shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.star_rounded,
-              color: Color(0xFF7A9CC6), size: 44),
+          child: Icon(Icons.star_rounded,
+              color: colors.accent, size: 44),
         ),
         const SizedBox(height: 24),
         Text(
           'Già fatto oggi!',
           style: GoogleFonts.playfairDisplay(
             fontSize: 24, fontWeight: FontWeight.w600,
-            color: const Color(0xFF3A4A5C),
+            color: colors.textPrimary,
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Hai già completato il check-in per oggi.\nTorna domani!',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF8A9BB5), fontSize: 14, height: 1.6,
+            color: colors.textSecondary, fontSize: 14, height: 1.6,
           ),
         ),
         const Spacer(),
@@ -474,14 +482,14 @@ class _CheckInState extends State<CheckIn> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 15),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8EEF7),
+              color: colors.surface,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
                 'Torna indietro',
                 style: TextStyle(
-                  color: Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                   fontWeight: FontWeight.w600, fontSize: 15,
                 ),
               ),
