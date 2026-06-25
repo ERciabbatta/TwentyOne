@@ -194,6 +194,49 @@ class _LoginRegisterState extends State<LoginRegister> {
                   ),
                 ),
               ),
+
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Expanded(child: Divider(color: Color(0xFF7A9CC6), thickness: 0.8)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "oppure",
+                      style: TextStyle(color: Color(0xFF7A9CC6), fontSize: 13),
+                    ),
+                  ),
+                  const Expanded(child: Divider(color: Color(0xFF7A9CC6), thickness: 0.8)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Auth().signInWithGoogle(),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFF7A9CC6), width: 1.2),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('lib/assets/google_logo.png', height: 22),
+                      const SizedBox(width: 12),
+                      const Text(
+                        "Continua con Google",
+                        style: TextStyle(
+                          color: Color(0xFF7A9CC6),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 40),
             ],
           ),
