@@ -14,25 +14,13 @@ jobs:
         with:
           channel: 'stable'
           architecture: x64
-
       - run: flutter pub get
+      
 
       - run: pod repo update
         working-directory: ios
 
-      - name: Disable code signing
-        run: |
-          sed -i '' 's/DEVELOPMENT_TEAM = [^;]*;/DEVELOPMENT_TEAM = "";/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/PROVISIONING_PROFILE_SPECIFIER = [^;]*;/PROVISIONING_PROFILE_SPECIFIER = "";/g' ios/Runner.xcodeproj/project.pbxproj
-
-      - name: Build iOS
-        run: |
-          flutter build ios --release --no-codesign \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_IDENTITY="" \
-            DEVELOPMENT_TEAM=""
+      - run: flutter build ios --release --no-codesign
 
       - run: mkdir Payload
         working-directory: build/ios/iphoneos
