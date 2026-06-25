@@ -1,77 +1,45 @@
-plugins {
-    id("com.android.application")
-    id("kotlin-android")
-    id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")
-}
+on:
+push:
+branches:
+- master
 
-import java.util.Properties
-        import java.io.FileInputStream
+name: Build My Apps
 
-// Carica le credenziali di firma di release da android/key.properties (NON committato).
-// Se il file non esiste (es. prima build locale, o CI senza secret), si ricade
-// sulla firma di debug per non rompere la build — ma l'APK risultante NON è
-// adatto alla pubblicazione sullo store.
-val keystorePropertiesFile = rootProject.file("key.properties")
-val keystoreProperties = Properties()
-val hasReleaseSigning = keystorePropertiesFile.exists()
-if (hasReleaseSigning) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
-}
+jobs:
+build:
+name: Build and Release new apk
+runs-on: ubuntu-latest
+steps:
+- uses: actions/checkout@v3
 
-android {
-    namespace = "com.twentyone.app"
-    compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+- uses: actions/setup-java@v2
+with:
+distribution: 'zulu'
+java-version: '17'
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-        isCoreLibraryDesugaringEnabled = true
-    }
+- uses: subosito/flutter-action@v2
+with:
+channel: 'stable'
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
+- run: flutter pub get
 
-    defaultConfig {
-        applicationId = "com.twentyone.app"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-        multiDexEnabled = true
-    }
+- name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
 
-    signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
-            }
-        }
-    }
+        - name: Create key.properties
+        run: |
+cat > android/key.properties <<EOF
+        storeFile=../app/release.jks
+storePassword=${{ secrets.STORE_PASSWORD }}
+keyAlias=${{ secrets.KEY_ALIAS }}
+keyPassword=${{ secrets.KEY_PASSWORD }}
+EOF
 
-    buildTypes {
-        release {
-            signingConfig = if (hasReleaseSigning) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
-        }
-    }
-}
+- run: flutter build apk --release --split-per-abi
 
-flutter {
-    source = "../.."
-}
-
-dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-
-    implementation(platform("com.google.firebase:firebase-bom:34.13.0"))
-    implementation("com.google.firebase:firebase-analytics")
-}
+- name: Push to Releases
+uses: ncipollo/release-action@v1
+with:
+artifacts: "build/app/outputs/apk/release/*"
+tag: v${{ github.run_number }}
+token: ${{ secrets.TOKEN }}
