@@ -55,13 +55,12 @@ class Auth {
     final googleUser = await completer.future;
     if (googleUser == null) return null;
 
-    final googleAuth = googleUser.authentication;
-    final scopes = ['email', 'profile'];
-    final clientAuth =
-    await googleUser.authorizationClient.authorizeScopes(scopes);
+    final idToken = googleUser.authentication.idToken;
+    final clientAuth = await googleUser.authorizationClient
+        .authorizeScopes(['email', 'profile']);
 
     final credential = GoogleAuthProvider.credential(
-      idToken: googleAuth.idToken,
+      idToken: idToken,
       accessToken: clientAuth.accessToken,
     );
 
