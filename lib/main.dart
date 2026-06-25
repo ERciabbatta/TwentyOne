@@ -25,7 +25,9 @@ void main() async {
 
     await themeProvider.caricaPreferenza();
 
-    await GoogleSignIn.instance.initialize();
+    await GoogleSignIn.instance.initialize(
+      serverClientId: '100839405357-foig1d53c1rp7b1hat8414fbd9kcfivn.apps.googleusercontent.com',
+    );
 
     final notifService = NotificationService();
     await notifService.init();
