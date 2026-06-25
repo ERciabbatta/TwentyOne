@@ -278,7 +278,7 @@ class _ProfiloState extends State<Profilo> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text('Versione 1.0.0',
+                          Text('Versione 1.4.3',
                               style: TextStyle(
                                   color: colors.textSecondary, fontSize: 13)),
                           const SizedBox(height: 16),

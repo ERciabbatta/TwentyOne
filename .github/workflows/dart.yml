@@ -37,6 +37,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/ios/iphoneos/TwentyOne.ipa
-          tag: v1.2.1
+          tag: v1.4.3
           overwrite: true
           body: "IOS Build"
