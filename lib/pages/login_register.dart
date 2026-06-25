@@ -15,7 +15,6 @@ class LoginRegister extends StatefulWidget {
 class _LoginRegisterState extends State<LoginRegister> {
   late bool isLogin;
   String? errorMessage = '';
-  bool _loadingGoogle = false;
 
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerEmail = TextEditingController();
@@ -50,31 +49,6 @@ class _LoginRegisterState extends State<LoginRegister> {
       if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message);
-    }
-  }
-
-  Future<void> signInWithGoogle() async {
-    setState(() {
-      _loadingGoogle = true;
-      errorMessage = '';
-    });
-    try {
-      final result = await Auth().signInWithGoogle();
-      if (result == null) {
-        setState(() => _loadingGoogle = false);
-        return;
-      }
-      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        errorMessage = e.message;
-        _loadingGoogle = false;
-      });
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Errore durante il login con Google.';
-        _loadingGoogle = false;
-      });
     }
   }
 
@@ -199,63 +173,6 @@ class _LoginRegisterState extends State<LoginRegister> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              Row(
-                children: [
-                  Expanded(child: Divider(color: colors.cardBorder)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('oppure',
-                        style: TextStyle(
-                            color: colors.textSecondary, fontSize: 13)),
-                  ),
-                  Expanded(child: Divider(color: colors.cardBorder)),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              GestureDetector(
-                onTap: _loadingGoogle ? null : signInWithGoogle,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: colors.cardBorder),
-                  ),
-                  child: Center(
-                    child: _loadingGoogle
-                        ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: colors.accent),
-                    )
-                        : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'lib/assets/google_logo.png',
-                          width: 20,
-                          height: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Continua con Google',
-                          style: TextStyle(
-                            color: colors.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 20),
               Center(
                 child: GestureDetector(
