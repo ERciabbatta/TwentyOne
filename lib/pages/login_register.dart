@@ -244,14 +244,11 @@ class _LoginRegisterState extends State<LoginRegister> {
                           shape: BoxShape.circle,
                           color: Color(0xFF4285F4),
                         ),
-                        child: const Center(
-                          child: Text(
-                            'G',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        child: Center(
+                          child: Image.asset(
+                            'lib/assets/google_logo.png',
+                            width: 20,
+                            height: 20,
                           ),
                         ),
                       ),
