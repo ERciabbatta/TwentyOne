@@ -12,6 +12,7 @@ import 'package:twentyone/widget/firebase_options.dart';
 import 'package:twentyone/widget/app_theme.dart';
 import 'package:twentyone/widget/theme_provider.dart';
 import 'package:twentyone/widget/app_colors.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final themeProvider = ThemeProvider();
 
@@ -23,6 +24,8 @@ void main() async {
     );
 
     await themeProvider.caricaPreferenza();
+
+    await GoogleSignIn.instance.initialize();
 
     final notifService = NotificationService();
     await notifService.init();
