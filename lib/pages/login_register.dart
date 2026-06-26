@@ -15,6 +15,7 @@ class LoginRegister extends StatefulWidget {
 class _LoginRegisterState extends State<LoginRegister> {
   late bool isLogin;
   String? errorMessage = '';
+  bool _loadingGoogle = false;
 
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerEmail = TextEditingController();
@@ -49,6 +50,32 @@ class _LoginRegisterState extends State<LoginRegister> {
       if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
     } on FirebaseAuthException catch (e) {
       setState(() => errorMessage = e.message);
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    setState(() {
+      _loadingGoogle = true;
+      errorMessage = '';
+    });
+    try {
+      final result = await Auth().signInWithGoogle();
+      if (result == null) {
+        setState(() => _loadingGoogle = false);
+        return;
+      }
+      await FirebaseAuth.instance.currentUser?.reload();
+      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message;
+        _loadingGoogle = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Errore durante il login con Google.';
+        _loadingGoogle = false;
+      });
     }
   }
 
@@ -130,8 +157,8 @@ class _LoginRegisterState extends State<LoginRegister> {
                 const SizedBox(height: 16),
                 Container(
                   width: double.infinity,
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: colors.errorBackground,
                     borderRadius: BorderRadius.circular(14),
@@ -174,6 +201,74 @@ class _LoginRegisterState extends State<LoginRegister> {
                 ),
               ),
               const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: colors.cardBorder)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'Oppure',
+                      style: TextStyle(
+                          color: colors.textSecondary, fontSize: 13),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: colors.cardBorder)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _loadingGoogle ? null : signInWithGoogle,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: colors.card,
+                    side: BorderSide(color: colors.cardBorder, width: 1.2),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: _loadingGoogle
+                      ? SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: colors.accent),
+                  )
+                      : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF4285F4),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'G',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Continua con Google',
+                        style: TextStyle(
+                          color: colors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               Center(
                 child: GestureDetector(
                   onTap: () {
@@ -191,49 +286,6 @@ class _LoginRegisterState extends State<LoginRegister> {
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  const Expanded(child: Divider(color: Color(0xFF7A9CC6), thickness: 0.8)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      "Oppure",
-                      style: TextStyle(color: Color(0xFF7A9CC6), fontSize: 13),
-                    ),
-                  ),
-                  const Expanded(child: Divider(color: Color(0xFF7A9CC6), thickness: 0.8)),
-                ],
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () => Auth().signInWithGoogle(),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFF7A9CC6), width: 1.2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset('lib/assets/google_logo.png', height: 22),
-                      const SizedBox(width: 12),
-                      const Text(
-                        "Continua con Google",
-                        style: TextStyle(
-                          color: Color(0xFF7A9CC6),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
