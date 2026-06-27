@@ -31,38 +31,17 @@ class Auth {
   }
 
   Future<UserCredential?> signInWithGoogle() async {
-    final googleSignIn = GoogleSignIn.instance;
+    final GoogleSignIn googleSignIn = GoogleSignIn();
 
-    final completer = Completer<GoogleSignInAccount?>();
-    late StreamSubscription sub;
-    sub = googleSignIn.authenticationEvents.listen((event) {
-      if (event is GoogleSignInAuthenticationEventSignIn) {
-        sub.cancel();
-        completer.complete(event.user);
-      } else if (event is GoogleSignInAuthenticationEventSignOut) {
-        sub.cancel();
-        completer.complete(null);
-      }
-    });
+    final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+    if (googleUser == null) return null; // utente ha annullato
 
-    try {
-      await googleSignIn.authenticate();
-    } catch (e) {
-      sub.cancel();
-      rethrow;
-    }
-
-    final googleUser = await completer.future;
-    if (googleUser == null) return null;
-
-    final googleAuth = googleUser.authentication;
-    final scopes = ['email', 'profile'];
-    final clientAuth =
-    await googleUser.authorizationClient.authorizeScopes(scopes);
+    final GoogleSignInAuthentication googleAuth =
+    await googleUser.authentication;
 
     final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
-      accessToken: clientAuth.accessToken,
     );
 
     return await _firebaseAuth.signInWithCredential(credential);
@@ -73,7 +52,7 @@ class Auth {
   }
 
   Future<void> signOut() async {
-    await GoogleSignIn.instance.signOut();
+    await GoogleSignIn().signOut();
     await _firebaseAuth.signOut();
   }
 }
