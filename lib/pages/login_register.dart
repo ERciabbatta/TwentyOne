@@ -73,7 +73,7 @@ class _LoginRegisterState extends State<LoginRegister> {
       });
     } catch (e) {
       setState(() {
-        errorMessage = 'Errore durante il login con Google.';
+        errorMessage = 'Errore durante il login con Google: $e';
         _loadingGoogle = false;
       });
     }
