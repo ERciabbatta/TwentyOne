@@ -207,7 +207,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
-                      'Oppure',
+                      'O',
                       style: TextStyle(
                           color: colors.textSecondary, fontSize: 13),
                     ),
