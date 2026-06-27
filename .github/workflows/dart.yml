@@ -2,6 +2,14 @@ name: iOS-ipa-build
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag della release (es. v1.4.4)'
+        required: true
+        default: 'v1.4.3'
+
+permissions:
+  contents: write
 
 jobs:
   build-ios:
@@ -14,8 +22,8 @@ jobs:
         with:
           channel: 'stable'
           architecture: x64
+
       - run: flutter pub get
-      
 
       - run: pod repo update
         working-directory: ios
@@ -37,6 +45,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/ios/iphoneos/TwentyOne.ipa
-          tag: v1.4.3
+          tag: ${{ github.event.inputs.tag }}
           overwrite: true
-          body: "IOS Build"
+          body: "iOS Build"

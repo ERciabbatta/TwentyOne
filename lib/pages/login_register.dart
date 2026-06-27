@@ -240,10 +240,6 @@ class _LoginRegisterState extends State<LoginRegister> {
                       Container(
                         width: 20,
                         height: 20,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(0xFF4285F4),
-                        ),
                         child: Center(
                           child: Image.asset(
                             'lib/assets/google_logo.png',
