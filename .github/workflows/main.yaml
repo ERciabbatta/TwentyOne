@@ -22,7 +22,18 @@ jobs:
           channel: 'stable'
 
       - run: flutter pub get
-      - run: flutter build apk --release --split-per-abi
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.jks
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          STORE_FILE: release.jks
 
       - name: Push to Releases
         uses: ncipollo/release-action@v1

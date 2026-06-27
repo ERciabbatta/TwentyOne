@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -5,19 +8,17 @@ plugins {
     id("com.google.gms.google-services")
 }
 
-import java.util.Properties
-        import java.io.FileInputStream
-
-// Carica le credenziali di firma di release da android/key.properties (NON committato).
-// Se il file non esiste (es. prima build locale, o CI senza secret), si ricade
-// sulla firma di debug per non rompere la build — ma l'APK risultante NON è
-// adatto alla pubblicazione sullo store.
+// Credenziali da file locale (sviluppo)
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 val hasReleaseSigning = keystorePropertiesFile.exists()
 if (hasReleaseSigning) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+// Credenziali da variabili d'ambiente (CI/GitHub Actions)
+val keyAliasEnv = System.getenv("KEY_ALIAS")
+val hasEnvSigning = keyAliasEnv != null
 
 android {
     namespace = "com.twentyone.app"
@@ -44,8 +45,14 @@ android {
     }
 
     signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
+        when {
+            hasEnvSigning -> create("release") {
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+                storeFile = file("release.jks")
+                storePassword = System.getenv("STORE_PASSWORD")
+            }
+            hasReleaseSigning -> create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
                 storeFile = file(keystoreProperties["storeFile"] as String)
@@ -56,7 +63,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseSigning) {
+            signingConfig = if (hasEnvSigning || hasReleaseSigning) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
