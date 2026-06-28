@@ -16,16 +16,19 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
   FlutterLocalNotificationsPlugin();
 
-  static const String _keyEventi = 'notifiche_eventi';
-  static const String _keyMotivazionali = 'notifiche_motivazionali';
-  static const String _keyCheckIn = 'notifiche_checkin';
-  static const int _idCheckIn = 888888;
+  static const String _keyEventi          = 'notifiche_eventi';
+  static const String _keyMotivazionali   = 'notifiche_motivazionali';
+  static const String _keyCheckIn         = 'notifiche_checkin';
+  static const String _keyStreakReminder  = 'notifiche_streak_reminder';
+  static const int    _idCheckIn          = 888888;
+  static const int    _idStreakReminder   = 777777;
 
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   Future<void> init() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Rome'));
+
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -61,10 +64,18 @@ class NotificationService {
       description: 'Frasi di ispirazione quotidiana',
       importance: Importance.defaultImportance,
     ));
+    await _plugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(const AndroidNotificationChannel(
+      'streak_reminder_channel',
+      'Recupero streak',
+      description: 'Avviso serale se non hai ancora fatto il check-in',
+      importance: Importance.high,
+    ));
   }
 
   void _onNotificationTap(NotificationResponse response) {
-    if (response.id == _idCheckIn) {
+    if (response.id == _idCheckIn || response.id == _idStreakReminder) {
       _navigateToCheckIn();
     }
   }
@@ -79,7 +90,8 @@ class NotificationService {
     final details = await _plugin.getNotificationAppLaunchDetails();
     if (details != null &&
         details.didNotificationLaunchApp &&
-        details.notificationResponse?.id == _idCheckIn) {
+        (details.notificationResponse?.id == _idCheckIn ||
+            details.notificationResponse?.id == _idStreakReminder)) {
       _navigateToCheckIn();
     }
   }
@@ -106,6 +118,11 @@ class NotificationService {
   Future<bool> getCheckInAttivo() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyCheckIn) ?? true;
+  }
+
+  Future<bool> getStreakReminderAttivo() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyStreakReminder) ?? true;
   }
 
   Future<void> setEventiAttivi(bool value) async {
@@ -138,22 +155,30 @@ class NotificationService {
     }
   }
 
+  Future<void> setStreakReminderAttivo(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyStreakReminder, value);
+    if (value) {
+      await scheduleStreakReminder();
+    } else {
+      await cancellaStreakReminder();
+    }
+  }
+
   tz.TZDateTime? _prossimaTriggerTimePerGiorno(String orario, int weekday) {
     final parts = orario.split(':');
     if (parts.length != 2) return null;
-    final ore = int.tryParse(parts[0]);
+    final ore    = int.tryParse(parts[0]);
     final minuti = int.tryParse(parts[1]);
     if (ore == null || minuti == null) return null;
 
     final now = tz.TZDateTime.now(tz.local);
-
     var candidate = tz.TZDateTime(tz.local, now.year, now.month, now.day, ore, minuti)
         .subtract(const Duration(minutes: 15));
 
     while (candidate.weekday != weekday || candidate.isBefore(now)) {
       candidate = candidate.add(const Duration(days: 1));
     }
-
     return candidate;
   }
 
@@ -161,6 +186,7 @@ class NotificationService {
     final attive = await getEventiAttivi();
     if (!attive) return;
     await cancellaNotificheEventi();
+
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
@@ -171,14 +197,14 @@ class NotificationService {
         .get();
 
     for (final doc in snapshot.docs) {
-      final data = doc.data();
+      final data   = doc.data();
       final inizio = data['inizio'] as String?;
-      final testo = data['testo'] as String? ?? 'Hai un evento tra 15 minuti';
+      final testo  = data['testo'] as String? ?? 'Hai un evento tra 15 minuti';
       final giorni = List<int>.from(data['giorni'] ?? []);
       if (inizio == null || giorni.isEmpty) continue;
 
       for (final giorno in giorni) {
-        final weekday = giorno + 1;
+        final weekday      = giorno + 1;
         final notificaTime = _prossimaTriggerTimePerGiorno(inizio, weekday);
         if (notificaTime == null) continue;
 
@@ -226,10 +252,12 @@ class NotificationService {
     final attive = await getMotivazionaliAttive();
     if (!attive) return;
     await cancellaMotivazionali();
-    final random = Random();
+
+    final random    = Random();
     final oreRandom = 4 + random.nextInt(7);
-    final trigger = tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
-    final quote = allQuotes[random.nextInt(allQuotes.length)];
+    final trigger   = tz.TZDateTime.now(tz.local).add(Duration(hours: oreRandom));
+    final quote     = allQuotes[random.nextInt(allQuotes.length)];
+
     await _plugin.zonedSchedule(
       id: 999999,
       title: '💪 ${quote.author}',
@@ -258,8 +286,8 @@ class NotificationService {
     if (!attivo) return;
     await cancellaCheckIn();
 
-    final now = tz.TZDateTime.now(tz.local);
-    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
+    final now     = tz.TZDateTime.now(tz.local);
+    var trigger   = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
 
     if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
       trigger = trigger.add(const Duration(days: 1));
@@ -288,5 +316,40 @@ class NotificationService {
   Future<void> cancellaCheckIn() async {
     await _plugin.cancel(id: _idCheckIn);
   }
-}
 
+  Future<void> scheduleStreakReminder() async {
+    final attivo = await getStreakReminderAttivo();
+    if (!attivo) return;
+    await cancellaStreakReminder();
+
+    final now   = tz.TZDateTime.now(tz.local);
+    var trigger = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20, 30);
+
+    if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
+      trigger = trigger.add(const Duration(days: 1));
+    }
+
+    await _plugin.zonedSchedule(
+      id: _idStreakReminder,
+      title: '🔥 Non perdere la streak!',
+      body: 'Non hai ancora fatto il check-in di oggi. Mantieni la tua serie!',
+      scheduledDate: trigger,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'streak_reminder_channel',
+          'Recupero streak',
+          channelDescription: 'Avviso serale se non hai ancora fatto il check-in',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> cancellaStreakReminder() async {
+    await _plugin.cancel(id: _idStreakReminder);
+  }
+}

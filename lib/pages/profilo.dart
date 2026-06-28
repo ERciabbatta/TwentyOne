@@ -6,6 +6,7 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/pages/cambia_password.dart';
 import 'package:twentyone/pages/notifiche.dart';
 import 'package:twentyone/pages/obiettivo.dart';
+import 'package:twentyone/pages/statistiche.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'package:twentyone/main.dart';
 
@@ -43,9 +44,9 @@ class _ProfiloState extends State<Profilo> {
 
   @override
   Widget build(BuildContext context) {
-    final email = user?.email ?? 'Nessuna email';
+    final email       = user?.email ?? 'Nessuna email';
     final displayName = user?.displayName ?? 'Utente';
-    final initials = displayName.isNotEmpty
+    final initials    = displayName.isNotEmpty
         ? displayName.trim().split(' ').map((e) => e[0]).take(2).join().toUpperCase()
         : '?';
 
@@ -137,8 +138,7 @@ class _ProfiloState extends State<Profilo> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.flag_rounded,
-                        color: colors.accent, size: 20),
+                    Icon(Icons.flag_rounded, color: colors.accent, size: 20),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -205,9 +205,19 @@ class _ProfiloState extends State<Profilo> {
                     builder: (_) => const OnboardingObiettivo(modifica: true),
                   ),
                 );
-                if (nuovo != null) {
-                  setState(() => _obiettivo = nuovo);
-                }
+                if (nuovo != null) setState(() => _obiettivo = nuovo);
+              },
+            ),
+            const SizedBox(height: 10),
+
+            _ActionTile(
+              icon: Icons.bar_chart_rounded,
+              label: 'Statistiche',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Statistiche()),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -216,17 +226,22 @@ class _ProfiloState extends State<Profilo> {
               icon: Icons.lock_outline,
               label: 'Cambia password',
               onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const CambioPassword()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CambioPassword()),
+                );
               },
             ),
             const SizedBox(height: 10),
+
             _ActionTile(
               icon: Icons.notifications_none_rounded,
               label: 'Notifiche',
               onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const Notifiche()));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Notifiche()),
+                );
               },
             ),
             const SizedBox(height: 10),
@@ -278,9 +293,11 @@ class _ProfiloState extends State<Profilo> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text('Versione 1.4.3',
-                              style: TextStyle(
-                                  color: colors.textSecondary, fontSize: 13)),
+                          Text(
+                            'Versione 1.4.3',
+                            style: TextStyle(
+                                color: colors.textSecondary, fontSize: 13),
+                          ),
                           const SizedBox(height: 16),
                           Divider(color: colors.surface),
                           const SizedBox(height: 16),
@@ -288,27 +305,34 @@ class _ProfiloState extends State<Profilo> {
                             'Ogni grande cambiamento inizia con 21 giorni di costanza. Traccia i tuoi progressi e trasforma le tue intenzioni in abitudini reali.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                color: colors.textSecondary, fontSize: 14, height: 1.6),
+                                color: colors.textSecondary,
+                                fontSize: 14,
+                                height: 1.6),
                           ),
                           const SizedBox(height: 8),
-                          Text('© 2026 Massimo Minni',
-                              style: TextStyle(
-                                  color: colors.textSecondary, fontSize: 12)),
+                          Text(
+                            '© 2026 Massimo Minni',
+                            style: TextStyle(
+                                color: colors.textSecondary, fontSize: 12),
+                          ),
                           const SizedBox(height: 24),
                           GestureDetector(
                             onTap: () => Navigator.pop(context),
                             child: Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding:
+                              const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
                                 color: colors.surface,
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Center(
-                                child: Text('Chiudi',
-                                    style: TextStyle(
-                                        color: colors.textPrimary,
-                                        fontWeight: FontWeight.w600)),
+                                child: Text(
+                                  'Chiudi',
+                                  style: TextStyle(
+                                      color: colors.textPrimary,
+                                      fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
                           ),
@@ -357,7 +381,9 @@ class _ProfiloState extends State<Profilo> {
                           Text(
                             'Sei sicuro di voler uscire?',
                             style: TextStyle(
-                                color: colors.textSecondary, fontSize: 14, height: 1.5),
+                                color: colors.textSecondary,
+                                fontSize: 14,
+                                height: 1.5),
                           ),
                           const SizedBox(height: 24),
                           Row(
@@ -366,16 +392,19 @@ class _ProfiloState extends State<Profilo> {
                                 child: GestureDetector(
                                   onTap: () => Navigator.pop(context, false),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
                                     decoration: BoxDecoration(
                                       color: colors.surface,
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: Center(
-                                      child: Text('Annulla',
-                                          style: TextStyle(
-                                              color: colors.textPrimary,
-                                              fontWeight: FontWeight.w600)),
+                                      child: Text(
+                                        'Annulla',
+                                        style: TextStyle(
+                                            color: colors.textPrimary,
+                                            fontWeight: FontWeight.w600),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -385,16 +414,19 @@ class _ProfiloState extends State<Profilo> {
                                 child: GestureDetector(
                                   onTap: () => Navigator.pop(context, true),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
                                     decoration: BoxDecoration(
                                       color: colors.errorBackground,
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: Center(
-                                      child: Text('Esci',
-                                          style: TextStyle(
-                                              color: colors.error,
-                                              fontWeight: FontWeight.w600)),
+                                      child: Text(
+                                        'Esci',
+                                        style: TextStyle(
+                                            color: colors.error,
+                                            fontWeight: FontWeight.w600),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -446,7 +478,8 @@ class _InfoCard extends StatelessWidget {
   final String label;
   final String value;
 
-  const _InfoCard({required this.icon, required this.label, required this.value});
+  const _InfoCard(
+      {required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -504,11 +537,13 @@ class _ThemeToggleTile extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text('Tema scuro',
-                    style: TextStyle(
-                        color: colors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500)),
+                child: Text(
+                  'Tema scuro',
+                  style: TextStyle(
+                      color: colors.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500),
+                ),
               ),
               Switch(
                 value: themeProvider.isDark,
@@ -528,7 +563,8 @@ class _ActionTile extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _ActionTile({required this.icon, required this.label, required this.onTap});
+  const _ActionTile(
+      {required this.icon, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -547,11 +583,13 @@ class _ActionTile extends StatelessWidget {
             Icon(icon, size: 18, color: colors.accent),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(label,
-                  style: TextStyle(
-                      color: colors.textPrimary,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500)),
+              child: Text(
+                label,
+                style: TextStyle(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500),
+              ),
             ),
             Icon(Icons.chevron_right, size: 18, color: colors.textSecondary),
           ],
