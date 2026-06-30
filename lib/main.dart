@@ -104,6 +104,7 @@ class _AuthGateState extends State<AuthGate> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             NotificationService().handleLaunchNotification();
           });
+          NotificationService().valutaResetStreakSeNecessario();
 
           _verificaObiettivo(snapshot.data!.uid);
         }
