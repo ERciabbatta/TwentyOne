@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
+import 'package:twentyone/widget/servizio_notifiche.dart';
 
 class CheckIn extends StatefulWidget {
   const CheckIn({super.key});
@@ -112,6 +113,10 @@ class _CheckInState extends State<CheckIn> {
           _salvato     = true;
         });
       }
+
+      // Check-in completato: cancella i promemoria di scadenza streak
+      // (01:00 / 01:30) ancora in coda — non servono più stanotte.
+      await NotificationService().cancellaStreakDeadline();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
