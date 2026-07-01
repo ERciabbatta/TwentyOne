@@ -110,8 +110,10 @@ class _CheckInState extends State<CheckIn> {
       if (mounted) {
         setState(() {
           _nuovaStreak = nuovaStreak;
-          _salvato     = true;
+          _salvato = true;
         });
+        // Check-in completato: cancella i promemoria di scadenza ancora in coda
+        await NotificationService().cancellaStreakDeadline();
       }
 
       // Check-in completato: cancella i promemoria di scadenza streak
