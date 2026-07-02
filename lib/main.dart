@@ -27,7 +27,6 @@ void main() async {
     final notifService = NotificationService();
     await notifService.init();
     await notifService.richiediPermessi();
-    await notifService.scheduleCheckIn();
 
     runApp(const MyApp());
   }, (error, stack) {
@@ -146,6 +145,7 @@ class _AuthGateState extends State<AuthGate> {
     final notifService = NotificationService();
     await notifService.scheduleNotificheEventi();
     await notifService.scheduleMotivazionale();
+    await notifService.scheduleCheckIn();
   }
 }
 

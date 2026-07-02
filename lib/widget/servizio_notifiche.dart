@@ -314,10 +314,26 @@ class NotificationService {
     }
     await cancellaCheckIn();
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    String? lastActiveDate;
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
+      final snapshot = await userDoc.get();
+      final data = snapshot.data();
+      lastActiveDate = data?['lastActiveDate'] as String?;
+    } catch (e) {
+      debugPrint('Errore nel recupero di lastActiveDate da Firestore: $e');
+    }
+
     final now     = tz.TZDateTime.now(tz.local);
     var trigger   = tz.TZDateTime(tz.local, now.year, now.month, now.day, 22, 0);
 
-    if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
+    final oggi = StreakResetLogic.dateKey(now);
+    if (lastActiveDate == oggi) {
+      trigger = trigger.add(const Duration(days: 1));
+    } else if (!trigger.isAfter(now.add(const Duration(minutes: 1)))) {
       trigger = trigger.add(const Duration(days: 1));
     }
 
@@ -403,12 +419,43 @@ class NotificationService {
     }
     await cancellaStreakDeadline();
 
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    String? lastActiveDate;
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
+      final snapshot = await userDoc.get();
+      final data = snapshot.data();
+      lastActiveDate = data?['lastActiveDate'] as String?;
+    } catch (e) {
+      debugPrint('Errore nel recupero di lastActiveDate da Firestore: $e');
+    }
+
     final now = tz.TZDateTime.now(tz.local);
 
     // Le notifiche fanno riferimento alla prossima occorrenza delle 01:00
     // e 01:30: se l'orario è già passato oggi, slittano a domani.
-    final trigger1h  = _prossimoOrarioOggiODomani(now, 1, 0);
-    final trigger30m = _prossimoOrarioOggiODomani(now, 1, 30);
+    var trigger1h  = _prossimoOrarioOggiODomani(now, 1, 0);
+    var trigger30m = _prossimoOrarioOggiODomani(now, 1, 30);
+
+    // Se per la prossima scadenza l'utente ha già fatto il check-in,
+    // facciamo slittare la notifica al giorno successivo
+    final send1h = StreakResetLogic.shouldSendReminder(
+      now: trigger1h,
+      lastActiveDateKey: lastActiveDate,
+    );
+    if (!send1h) {
+      trigger1h = trigger1h.add(const Duration(days: 1));
+    }
+
+    final send30m = StreakResetLogic.shouldSendReminder(
+      now: trigger30m,
+      lastActiveDateKey: lastActiveDate,
+    );
+    if (!send30m) {
+      trigger30m = trigger30m.add(const Duration(days: 1));
+    }
 
     await _plugin.zonedSchedule(
       id: _idStreakDeadline1h,
