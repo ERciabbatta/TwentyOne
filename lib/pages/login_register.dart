@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata unificata di accesso e registrazione.
+/// Permette all'utente di autenticarsi con email/password o con Google.
+/// La modalità iniziale (login o registrazione) è configurabile tramite [startAsLogin].
 class LoginRegister extends StatefulWidget {
   final bool startAsLogin;
   const LoginRegister({super.key, this.startAsLogin = true});
@@ -13,12 +16,17 @@ class LoginRegister extends StatefulWidget {
 }
 
 class _LoginRegisterState extends State<LoginRegister> {
+  // true = modalità login, false = modalità registrazione
   late bool isLogin;
+  
+  // Eventuale messaggio di errore da mostrare all'utente
   String? errorMessage = '';
+  
+  // true durante il caricamento del login con Google
   bool _loadingGoogle = false;
 
-  final TextEditingController _controllerName = TextEditingController();
-  final TextEditingController _controllerEmail = TextEditingController();
+  final TextEditingController _controllerName     = TextEditingController();
+  final TextEditingController _controllerEmail    = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
   @override
@@ -27,6 +35,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     isLogin = widget.startAsLogin;
   }
 
+  /// Effettua il login con email e password tramite Firebase Auth.
   Future<void> signInWithEmailAndPassword() async {
     try {
       await Auth().signInWithEmailAndPassword(
@@ -39,6 +48,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     }
   }
 
+  /// Registra un nuovo utente con email e password e aggiorna il suo displayName.
   Future<void> createUserWithEmailAndPassword() async {
     try {
       await Auth().createUserWithEmailAndPassword(
@@ -53,6 +63,7 @@ class _LoginRegisterState extends State<LoginRegister> {
     }
   }
 
+  /// Avvia il flusso di autenticazione con Google (OAuth via popup/browser esterno).
   Future<void> signInWithGoogle() async {
     setState(() {
       _loadingGoogle = true;

@@ -7,6 +7,13 @@ import 'package:twentyone/pages/note.dart';
 import 'package:twentyone/pages/inspo.dart';
 import 'package:twentyone/pages/profilo.dart';
 
+/// Shell principale dell'app dopo il login: gestisce la navigazione fra
+/// le quattro sezioni (Home, Note, Profilo, Ispirati) tramite una barra
+/// di navigazione inferiore custom.
+///
+/// Questa è la versione con nome in PascalCase; nel progetto esiste anche
+/// `my_bottom_bar.dart` (snake_case), mantenuto per compatibilità con
+/// import esistenti ma logicamente equivalente.
 class MyBottomBar extends StatefulWidget {
   const MyBottomBar({super.key});
 
@@ -15,12 +22,17 @@ class MyBottomBar extends StatefulWidget {
 }
 
 class _MyBottomBarState extends State<MyBottomBar> {
+  /// Indice della tab attualmente visibile (0=Home, 1=Note, 2=Profilo, 3=Ispirati).
   int _currentPage = 0;
 
   // Una Key diversa per ogni "visita" alla tab Home forza la ricostruzione
 
+  /// Contatore incrementato ad ogni rientro sulla tab Home: usato come
+  /// parte della Key del widget Home per forzarne la ricostruzione completa
+  /// (e quindi il refresh dei dati) ogni volta che l'utente ci torna.
   int _homeRebuildCount = 0;
 
+  /// Elenco ordinato delle pagine associate alle tab della barra.
   List<Widget> get _pages => [
     Home(key: ValueKey('home_$_homeRebuildCount')),
     const Note(),
@@ -28,6 +40,8 @@ class _MyBottomBarState extends State<MyBottomBar> {
     const Inspo(),
   ];
 
+  /// Gestisce il tap su una voce della barra: aggiorna la tab corrente e,
+  /// se si sta rientrando sulla Home, incrementa il contatore di rebuild.
   void _onTap(int index) {
     setState(() {
       if (index == 0 && _currentPage != 0) {
@@ -49,6 +63,8 @@ class _MyBottomBarState extends State<MyBottomBar> {
   }
 }
 
+/// Barra di navigazione inferiore vera e propria: renderizza le quattro
+/// voci (`_NavItem`) ed evidenzia quella corrispondente a [currentIndex].
 class _BottomBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -110,6 +126,9 @@ class _BottomBar extends StatelessWidget {
   }
 }
 
+/// Singola voce della barra di navigazione: mostra un'icona e, solo se
+/// [selected] è vero, anche l'etichetta testuale accanto (per risparmiare
+/// spazio quando la voce non è attiva).
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;

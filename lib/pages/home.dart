@@ -9,6 +9,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Dashboard principale dell'applicazione.
+/// Mostra la streak corrente, i giorni rimanenti al completamento del ciclo di 21 giorni,
+/// l'obiettivo personale impostato dall'utente, le note del giorno e frasi motivazionali.
 class Home extends StatefulWidget {
   Home({super.key});
 
@@ -19,10 +22,19 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  // Numero consecutivo di giorni con check-in eseguito (streak corrente)
   int _streakCount = 0;
+  
+  // Giorni ancora necessari a completare il ciclo di 21 giorni
   int _giorniRimanenti = 21;
+  
+  // true se l'utente ha completato tutti e 21 i giorni
   bool _cicloCompletato = false;
+  
+  // true se va mostrato il pulsante per effettuare il check-in (dopo le 22:00)
   bool _mostraBottoneCheckin = false;
+  
+  // Testo dell'obiettivo personale dell'utente
   String _obiettivo = '';
 
   @override
@@ -31,6 +43,9 @@ class _HomeState extends State<Home> {
     _caricaDatiUtente();
   }
 
+  /// Recupera in parallelo tutti i dati aggregati per la home
+  /// (streak, giorni rimanenti, visibilità pulsante check-in, obiettivo)
+  /// e aggiorna lo stato del widget.
   Future<void> _caricaDatiUtente() async {
     final streak    = await _leggiStreak();
     final rimanenti = await _calcolaGiorniRimanenti();
@@ -47,6 +62,7 @@ class _HomeState extends State<Home> {
     }
   }
 
+  /// Recupera il testo dell'obiettivo dell'utente da Firestore.
   Future<String> _caricaObiettivo() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return '';
@@ -57,6 +73,8 @@ class _HomeState extends State<Home> {
     return doc.data()?['obiettivo'] as String? ?? '';
   }
 
+  /// Determina se mostrare il pulsante del check-in:
+  /// lo mostra solo dopo le 22:00 e solo se l'utente non ha già fatto il check-in oggi.
   Future<bool> _calcolaBottoneCheckin() async {
     final ora = DateTime.now().hour;
     if (ora < 22) return false;
@@ -74,6 +92,8 @@ class _HomeState extends State<Home> {
     return lastActiveDate != oggi;
   }
 
+  /// Calcola i giorni rimanenti al completamento del ciclo di 21 giorni
+  /// a partire dalla data di inizio salvata su Firestore (o dalla data di creazione account).
   Future<int> _calcolaGiorniRimanenti() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 21;
@@ -92,6 +112,7 @@ class _HomeState extends State<Home> {
       final creazione = user.metadata.creationTime;
       if (creazione == null) return 21;
       dataInizio = DateTime(creazione.year, creazione.month, creazione.day);
+      // Salva la data di inizio calcolata per le sessioni future
       await FirebaseFirestore.instance
           .collection('utenti')
           .doc(user.uid)
@@ -108,6 +129,7 @@ class _HomeState extends State<Home> {
     return rim < 0 ? 0 : rim;
   }
 
+  /// Legge il valore corrente della streak dal documento utente su Firestore.
   Future<int> _leggiStreak() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return 0;
@@ -125,17 +147,21 @@ class _HomeState extends State<Home> {
     return streak;
   }
 
+  /// Formatta una data come stringa nel formato "YYYY-MM-DD".
   String _dateKey(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
+  /// Calcola la differenza in giorni tra due date [DateTime] (ignorando l'orario).
   int _dayDifference(DateTime a, DateTime b) {
     final da = DateTime(a.year, a.month, a.day);
     final db = DateTime(b.year, b.month, b.day);
     return db.difference(da).inDays;
   }
 
+  /// Restituisce l'indice (0 = lunedì … 6 = domenica) del giorno corrente.
   int get _giornoOggi => DateTime.now().weekday - 1;
 
+  /// Stream che emette gli aggiornamenti in tempo reale delle note dell'utente da Firestore.
   Stream<QuerySnapshot> _noteStream() {
     final user = FirebaseAuth.instance.currentUser;
     return FirebaseFirestore.instance
@@ -145,6 +171,7 @@ class _HomeState extends State<Home> {
         .snapshots();
   }
 
+  /// Estrae l'ora intera da una stringa di orario in formato "HH:MM".
   int _getOra(String orario) {
     try {
       return int.parse(orario.split(':')[0]);
@@ -153,6 +180,8 @@ class _HomeState extends State<Home> {
     }
   }
 
+  /// Restituisce la fascia oraria ("mattina", "pomeriggio", "sera")
+  /// in base all'ora di inizio dell'evento o dell'attività.
   String _getFasciaOraria(String inizio) {
     final ora = _getOra(inizio);
     if (ora >= 6 && ora < 12) return 'mattina';

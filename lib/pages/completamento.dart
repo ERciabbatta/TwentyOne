@@ -5,6 +5,9 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'dart:math';
 
+/// Schermata visualizzata al completamento del percorso dei 21 giorni.
+/// Presenta statistiche riassuntive sull'andamento delle routine e del mood,
+/// ed esegue un'animazione festosa con coriandoli colorati.
 class Completamento extends StatefulWidget {
   const Completamento({super.key});
 
@@ -14,19 +17,35 @@ class Completamento extends StatefulWidget {
 
 class _CompletamentoState extends State<Completamento>
     with TickerProviderStateMixin {
+  // Controller di animazione per il ridimensionamento degli elementi grafici centrali
   late AnimationController _scaleController;
+  
+  // Controller di animazione per l'effetto di dissolvenza (fade-in) dei testi
   late AnimationController _fadeController;
+  
+  // Controller di animazione che gestisce la caduta continua dei coriandoli
   late AnimationController _confettiController;
+  
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
 
+  // Lista delle particelle (coriandoli) animate a schermo
   final List<_ConfettiParticle> _particles = [];
   final Random _random = Random();
 
+  // Flag che indica se il caricamento delle statistiche da Firestore è in corso
   bool _loading = true;
+  
+  // Valore medio del mood dell'utente durante il percorso
   double _moodMedio = 0;
+  
+  // Percentuale di completamento positivo delle routine giornaliere
   double _routinePercent = 0;
+  
+  // Valore massimo di mood registrato
   int _giornoMigliore = 0;
+  
+  // Numero totale di check-in effettuati
   int _checkInTotali = 0;
 
   final List<String> _emoji = ['😞', '😕', '😐', '🙂', '😄'];
@@ -65,6 +84,7 @@ class _CompletamentoState extends State<Completamento>
     _caricaStatistiche();
   }
 
+  /// Recupera la cronologia dei check-in dell'utente da Firestore e calcola le statistiche di riassunto.
   Future<void> _caricaStatistiche() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) {
@@ -111,6 +131,7 @@ class _CompletamentoState extends State<Completamento>
     _avviaAnimazioni();
   }
 
+  /// Avvia i vari controller di animazione con un piccolo ritardo per fluidità visiva.
   void _avviaAnimazioni() {
     Future.delayed(const Duration(milliseconds: 200), () {
       if (!mounted) return;
@@ -120,6 +141,8 @@ class _CompletamentoState extends State<Completamento>
     });
   }
 
+  /// Mostra una finestra di dialogo di conferma per ripristinare il percorso di 21 giorni
+  /// eliminando i dati correnti su Firestore (check-in, note, obiettivo).
   Future<void> _mostraDialogReset() async {
     final colors = AppColors.of(context);
     final conferma = await showDialog<bool>(
@@ -519,6 +542,8 @@ class _CompletamentoState extends State<Completamento>
   }
 }
 
+/// Modella una singola particella di coriandolo per l'effetto festivo.
+/// Contiene coordinate, dimensioni, velocità di caduta e caratteristiche di rotazione.
 class _ConfettiParticle {
   late double x;
   late double y;
@@ -547,6 +572,8 @@ class _ConfettiParticle {
   }
 }
 
+/// CustomPainter per disegnare le particelle di coriandoli a schermo.
+/// Gestisce la traslazione, oscillazione (wobble) e la rotazione di ogni singola particella.
 class _ConfettiPainter extends CustomPainter {
   final List<_ConfettiParticle> particles;
   final double progress;

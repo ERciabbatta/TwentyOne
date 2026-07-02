@@ -5,6 +5,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata delle statistiche personali del ciclo di 21 giorni.
+/// Mostra grafici sull'andamento del mood e delle routine giornaliere,
+/// oltre a card riepilogative su streak, best streak, check-in totali e media mood.
 class Statistiche extends StatefulWidget {
   const Statistiche({super.key});
 

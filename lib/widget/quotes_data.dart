@@ -1,3 +1,6 @@
+/// Rappresenta una singola citazione motivazionale mostrata nella pagina
+/// `inspo.dart`: testo, autore e categoria tematica (es. "Disciplina",
+/// "Mindset", "Coraggio").
 class Quote {
   final String text;
   final String author;
@@ -10,6 +13,8 @@ class Quote {
   });
 }
 
+/// Dataset statico di citazioni motivazionali usate come contenuto della
+/// pagina Ispirati, raggruppate per [Quote.category].
 const List<Quote> allQuotes = [
   Quote(text: 'La disciplina è il ponte tra gli obiettivi e i risultati.', author: 'Jim Rohn', category: 'Disciplina'),
   Quote(text: 'Prima formi le tue abitudini, poi le tue abitudini formano te.', author: 'John Dryden', category: 'Abitudini'),

@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata del Calendario che mostra all'utente i giorni in cui ha completato il check-in.
+/// Utilizza il pacchetto `table_calendar` per visualizzare una vista mensile.
 class Calendario extends StatefulWidget {
   const Calendario({super.key});
 
@@ -13,7 +15,10 @@ class Calendario extends StatefulWidget {
 }
 
 class _CalendarioState extends State<Calendario> {
+  // Insieme delle date (formato YYYY-MM-DD) in cui l'utente ha eseguito il check-in
   Set<String> _giorniCheckIn = {};
+  
+  // Flag per indicare lo stato di caricamento dei dati da Firestore
   bool _caricamento = true;
 
   @override
@@ -22,6 +27,7 @@ class _CalendarioState extends State<Calendario> {
     _caricaCheckIn();
   }
 
+  /// Recupera l'elenco dei check-in salvati per l'utente corrente da Cloud Firestore.
   Future<void> _caricaCheckIn() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) {
@@ -45,9 +51,12 @@ class _CalendarioState extends State<Calendario> {
     }
   }
 
+  /// Converte un oggetto [DateTime] in una stringa chiave con formato "YYYY-MM-DD"
+  /// utilizzabile per la mappa ed il confronto dei check-in.
   String _chiaveData(DateTime data) =>
       '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
 
+  /// Ritorna true se l'utente ha eseguito il check-in nella giornata passata come parametro.
   bool _haCheckIn(DateTime giorno) =>
       _giorniCheckIn.contains(_chiaveData(giorno));
 
@@ -197,6 +206,8 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
+  /// Costruisce il widget grafico per un singolo giorno del calendario.
+  /// Evidenzia i giorni con check-in completato con un colore specifico (es. verde).
   Widget _buildGiornoCheckIn(DateTime day, Color sfondo, Color testo,
       {bool bordo = false}) {
     final colors = AppColors.of(context);
@@ -222,6 +233,7 @@ class _CalendarioState extends State<Calendario> {
     );
   }
 
+  /// Costruisce una singola voce della legenda in basso per spiegare i colori usati nel calendario.
   Widget _buildVoiceLegenda(Color colore, String etichetta) {
     final colors = AppColors.of(context);
     return Row(

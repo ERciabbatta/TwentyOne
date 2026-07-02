@@ -4,7 +4,16 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
+/// Configurazione del progetto Firebase per le diverse piattaforme,
+/// generata automaticamente dalla FlutterFire CLI e usata da
+/// `Firebase.initializeApp` in `main.dart`.
+///
+/// Non modificare a mano: per rigenerarla eseguire nuovamente il comando
+/// `flutterfire configure`.
 class DefaultFirebaseOptions {
+  /// Restituisce le opzioni Firebase corrette in base alla piattaforma su
+  /// cui l'app è in esecuzione (Android o iOS); lancia un'eccezione per
+  /// web e per le piattaforme desktop non ancora configurate.
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
       throw UnsupportedError(
@@ -39,6 +48,7 @@ class DefaultFirebaseOptions {
     }
   }
 
+  /// Opzioni Firebase per la build Android.
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCdmhg5ombq00APvgkioqoU6ExGG4s8sww',
     appId: '1:100839405357:android:4c6f8ceb65fbd4643885a4',
@@ -48,6 +58,7 @@ class DefaultFirebaseOptions {
     storageBucket: 'twentyone-b6a4a.firebasestorage.app',
   );
 
+  /// Opzioni Firebase per la build iOS.
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyBWgchQmD4Oyz7C8b3QOPBPut9W_pUk95s',
     appId: '1:100839405357:ios:981f762cbe2f757f3885a4',

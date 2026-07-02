@@ -4,10 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata di onboarding per definire l'obiettivo personale del ciclo di 21 giorni.
+/// Può essere usata sia come schermata di primo avvio che come schermata di modifica
+/// dell'obiettivo esistente (quando [modifica] è `true`).
 class OnboardingObiettivo extends StatefulWidget {
-
+  /// Se true, la schermata opera in modalità modifica (pre-popola il campo con l'obiettivo salvato).
   final bool modifica;
 
+  /// Callback invocata al completamento dell'onboarding (non in modalità modifica).
   final VoidCallback? onCompletato;
   const OnboardingObiettivo({super.key, this.modifica = false, this.onCompletato});
 
@@ -16,10 +20,16 @@ class OnboardingObiettivo extends StatefulWidget {
 }
 
 class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
+  // Controller per il campo di testo in cui l'utente scrive l'obiettivo
   final _controller = TextEditingController();
+  
+  // true durante il salvataggio su Firestore
   bool _caricamento = false;
+  
+  // Messaggio di errore di validazione
   String? _errore;
 
+  // Lista di suggerimenti di obiettivi da mostrare come chip selezionabili
   final List<String> _suggerimenti = [
     'Meditare ogni mattina',
     'Correre 3 volte a settimana',
@@ -34,9 +44,11 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
   @override
   void initState() {
     super.initState();
+    // In modalità modifica, pre-popola il campo con l'obiettivo già salvato
     if (widget.modifica) _caricaObiettivoEsistente();
   }
 
+  /// Recupera l'obiettivo corrente salvato su Firestore e lo inserisce nel controller.
   Future<void> _caricaObiettivoEsistente() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) return;
@@ -50,6 +62,9 @@ class _OnboardingObiettivoState extends State<OnboardingObiettivo> {
     }
   }
 
+  /// Valida il testo inserito e salva l'obiettivo su Firestore.
+  /// In modalità modifica effettua un `pop` con il valore aggiornato,
+  /// altrimenti invoca la callback [onCompletato].
   Future<void> _salva() async {
     final testo = _controller.text.trim();
     if (testo.isEmpty) {

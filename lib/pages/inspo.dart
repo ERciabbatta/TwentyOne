@@ -5,8 +5,11 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+// Categorie disponibili per filtrare le citazioni nella schermata Ispirazione
 const List<String> _categories = ['Tutte', 'Disciplina', 'Abitudini', 'Mindset', 'Cambiamento', 'Coraggio', 'Gratitudine'];
 
+/// Schermata di ispirazione che presenta la citazione del giorno e una raccolta filtrabile
+/// di frasi motivazionali tratte da [allQuotes], con possibilità di aggiungere preferiti.
 class Inspo extends StatefulWidget {
   const Inspo({super.key});
 
@@ -15,8 +18,13 @@ class Inspo extends StatefulWidget {
 }
 
 class _InspoState extends State<Inspo> {
+  // Categoria attualmente selezionata per filtrare le citazioni
   String _selectedCategory = 'Tutte';
+  
+  // Indici delle citazioni salvate tra i preferiti dall'utente
   final Set<int> _favorites = {};
+  
+  // true una volta terminato il caricamento dei preferiti da Firestore
   bool _favoritiCaricati = false;
 
   @override
@@ -25,6 +33,7 @@ class _InspoState extends State<Inspo> {
     _caricaPreferiti();
   }
 
+  /// Carica da Firestore la lista degli indici delle citazioni preferite dell'utente.
   Future<void> _caricaPreferiti() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) return;
@@ -41,6 +50,7 @@ class _InspoState extends State<Inspo> {
     }
   }
 
+  /// Persiste su Firestore l'insieme corrente degli indici dei preferiti.
   Future<void> _salvaPreferiti() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) return;
@@ -50,6 +60,7 @@ class _InspoState extends State<Inspo> {
         .set({'preferiti': _favorites.toList()}, SetOptions(merge: true));
   }
 
+  /// Aggiunge o rimuove una citazione dai preferiti e salva la modifica su Firestore.
   void _toggleFavorite(int index) {
     setState(() {
       if (_favorites.contains(index)) {
@@ -61,8 +72,11 @@ class _InspoState extends State<Inspo> {
     _salvaPreferiti();
   }
 
+  /// Restituisce la citazione del giorno, calcolata in modo deterministico dalla data odierna.
   Quote get _quoteOfTheDay => getQuoteOfDay();
 
+  /// Restituisce le citazioni filtrate per categoria (esclusa la citazione del giorno)
+  /// in base alla selezione corrente di [_selectedCategory].
   List<Quote> get _filteredQuotes {
     final quoteOfTheDay = _quoteOfTheDay;
     return allQuotes.where((q) {

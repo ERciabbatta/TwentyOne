@@ -9,6 +9,13 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:twentyone/widget/quotes_data.dart';
 import 'package:twentyone/widget/streak_reset_logic.dart';
 
+/// Gestisce la pianificazione e la cancellazione di tutte le notifiche
+/// locali dell'app tramite `flutter_local_notifications`: promemoria per
+/// gli eventi/note dell'utente, frasi motivazionali, check-in serale,
+/// avviso di rischio streak e scadenza/azzeramento streak notturno.
+///
+/// È un singleton (accessibile con `NotificationService()`), così tutta
+/// l'app condivide la stessa istanza del plugin di notifiche.
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
@@ -17,10 +24,13 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin =
   FlutterLocalNotificationsPlugin();
 
+  // Chiavi SharedPreferences per le preferenze di attivazione di ciascuna
+  // categoria di notifica.
   static const String _keyEventi          = 'notifiche_eventi';
   static const String _keyMotivazionali   = 'notifiche_motivazionali';
   static const String _keyCheckIn         = 'notifiche_checkin';
   static const String _keyStreakReminder  = 'notifiche_streak_reminder';
+  // ID fissi delle notifiche singole (non legate a un documento specifico).
   static const int    _idCheckIn          = 888888;
   static const int    _idStreakReminder   = 777777;
 
@@ -34,8 +44,15 @@ class NotificationService {
   static const String _keyUltimoGiornoValutatoReset =
       'streak_reset_ultimo_giorno_valutato';
 
+  /// Chiave globale del Navigator, usata per poter navigare (es. verso
+  /// la pagina di check-in) da un tap su una notifica, anche quando non
+  /// si ha un `BuildContext` diretto a disposizione.
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  /// Inizializza il plugin di notifiche locali: imposta il fuso orario
+  /// (Europe/Rome), configura le impostazioni Android/iOS e crea i
+  /// canali di notifica Android usati dalle varie categorie di avvisi.
+  /// Va chiamato una sola volta all'avvio dell'app.
   Future<void> init() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Rome'));
@@ -93,6 +110,9 @@ class NotificationService {
     ));
   }
 
+  /// Callback invocata quando l'utente tocca una notifica mentre l'app è
+  /// aperta (o in background): se l'id corrisponde a una notifica legata
+  /// al check-in, naviga direttamente alla pagina di check-in.
   void _onNotificationTap(NotificationResponse response) {
     if (response.id == _idCheckIn ||
         response.id == _idStreakReminder ||
@@ -102,12 +122,17 @@ class NotificationService {
     }
   }
 
+  /// Effettua la navigazione verso la pagina di check-in (`/checkin`)
+  /// usando [navigatorKey]; non fa nulla se il context non è disponibile.
   void _navigateToCheckIn() {
     final context = navigatorKey.currentContext;
     if (context == null) return;
     Navigator.of(context).pushNamed('/checkin');
   }
 
+  /// Controlla se l'app è stata avviata toccando una notifica relativa al
+  /// check-in (app precedentemente chiusa) e, in tal caso, naviga subito
+  /// alla pagina di check-in. Va chiamato all'avvio dell'app.
   Future<void> handleLaunchNotification() async {
     final details = await _plugin.getNotificationAppLaunchDetails();
     if (details != null &&
@@ -120,6 +145,8 @@ class NotificationService {
     }
   }
 
+  /// Richiede all'utente il permesso di mostrare notifiche (necessario
+  /// su iOS e sulle versioni recenti di Android).
   Future<void> richiediPermessi() async {
     await _plugin
         .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
@@ -129,26 +156,36 @@ class NotificationService {
         ?.requestNotificationsPermission();
   }
 
+  /// Indica se le notifiche di promemoria eventi/note sono attive
+  /// (default: attive).
   Future<bool> getEventiAttivi() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyEventi) ?? true;
   }
 
+  /// Indica se le notifiche di frasi motivazionali sono attive
+  /// (default: attive).
   Future<bool> getMotivazionaliAttive() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyMotivazionali) ?? true;
   }
 
+  /// Indica se il promemoria di check-in serale è attivo
+  /// (default: attivo).
   Future<bool> getCheckInAttivo() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyCheckIn) ?? true;
   }
 
+  /// Indica se il promemoria di recupero streak (serale, prima del
+  /// check-in) è attivo (default: attivo).
   Future<bool> getStreakReminderAttivo() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_keyStreakReminder) ?? true;
   }
 
+  /// Aggiorna la preferenza di attivazione delle notifiche eventi e
+  /// pianifica/cancella di conseguenza le notifiche già programmate.
   Future<void> setEventiAttivi(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyEventi, value);
@@ -159,6 +196,8 @@ class NotificationService {
     }
   }
 
+  /// Aggiorna la preferenza di attivazione delle frasi motivazionali e
+  /// pianifica/cancella di conseguenza la notifica programmata.
   Future<void> setMotivazionaliAttive(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyMotivazionali, value);
@@ -169,6 +208,9 @@ class NotificationService {
     }
   }
 
+  /// Aggiorna la preferenza di attivazione del check-in serale e
+  /// pianifica/cancella di conseguenza la notifica (e la relativa
+  /// catena di scadenza streak).
   Future<void> setCheckInAttivo(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyCheckIn, value);
@@ -179,6 +221,8 @@ class NotificationService {
     }
   }
 
+  /// Aggiorna la preferenza di attivazione del promemoria di recupero
+  /// streak e pianifica/cancella di conseguenza la notifica programmata.
   Future<void> setStreakReminderAttivo(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyStreakReminder, value);
@@ -189,6 +233,10 @@ class NotificationService {
     }
   }
 
+  /// Calcola il prossimo orario (in un dato giorno della settimana) a
+  /// cui far scattare una notifica, anticipato di 15 minuti rispetto a
+  /// [orario] (formato `HH:MM`). Restituisce `null` se [orario] non è
+  /// nel formato atteso.
   tz.TZDateTime? _prossimaTriggerTimePerGiorno(String orario, int weekday) {
     final parts = orario.split(':');
     if (parts.length != 2) return null;
@@ -206,6 +254,10 @@ class NotificationService {
     return candidate;
   }
 
+  /// Pianifica una notifica ricorrente 15 minuti prima di ogni nota
+  /// dell'utente (lette da Firestore), per ciascun giorno della
+  /// settimana in cui la nota è attiva. Non fa nulla se le notifiche
+  /// eventi sono disattivate o l'utente non è autenticato.
   Future<void> scheduleNotificheEventi() async {
     final attive = await getEventiAttivi();
     if (!attive) return;
@@ -256,6 +308,9 @@ class NotificationService {
     }
   }
 
+  /// Cancella tutte le notifiche di promemoria eventi/note precedentemente
+  /// programmate per l'utente corrente (una per ogni combinazione
+  /// nota/giorno della settimana).
   Future<void> cancellaNotificheEventi() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -272,6 +327,9 @@ class NotificationService {
     }
   }
 
+  /// Pianifica una singola notifica con una citazione motivazionale
+  /// casuale, con un ritardo casuale tra 4 e 10 ore da adesso. Non fa
+  /// nulla se le notifiche motivazionali sono disattivate.
   Future<void> scheduleMotivazionale() async {
     final attive = await getMotivazionaliAttive();
     if (!attive) return;
@@ -301,10 +359,15 @@ class NotificationService {
     );
   }
 
+  /// Cancella la notifica motivazionale precedentemente programmata.
   Future<void> cancellaMotivazionali() async {
     await _plugin.cancel(id: 999999);
   }
 
+  /// Pianifica la notifica di check-in serale (alle 22:00, o al giorno
+  /// successivo se il check-in di oggi è già stato fatto o le 22:00 sono
+  /// già passate) e, a cascata, i promemoria di scadenza streak. Non fa
+  /// nulla se il promemoria di check-in è disattivato.
   Future<void> scheduleCheckIn() async {
     final attivo = await getCheckInAttivo();
     if (!attivo) {
@@ -359,11 +422,16 @@ class NotificationService {
     await scheduleStreakDeadline();
   }
 
+  /// Cancella la notifica di check-in serale e, a cascata, tutti i
+  /// promemoria di scadenza streak collegati.
   Future<void> cancellaCheckIn() async {
     await _plugin.cancel(id: _idCheckIn);
     await cancellaStreakDeadline();
   }
 
+  /// Pianifica il promemoria serale "non perdere la streak" alle 20:30
+  /// (o al giorno successivo se l'orario è già passato oggi). Non fa
+  /// nulla se il promemoria è disattivato.
   Future<void> scheduleStreakReminder() async {
     final attivo = await getStreakReminderAttivo();
     if (!attivo) return;
@@ -396,6 +464,8 @@ class NotificationService {
     );
   }
 
+  /// Cancella il promemoria "non perdere la streak" precedentemente
+  /// programmato.
   Future<void> cancellaStreakReminder() async {
     await _plugin.cancel(id: _idStreakReminder);
   }
@@ -507,6 +577,8 @@ class NotificationService {
     await _plugin.cancel(id: _idStreakResetAvvenuto);
   }
 
+  /// Restituisce il prossimo orario [ora]:[minuto], oggi se non è ancora
+  /// passato oppure domani se è già trascorso.
   tz.TZDateTime _prossimoOrarioOggiODomani(tz.TZDateTime now, int ora, int minuto) {
     var candidate =
     tz.TZDateTime(tz.local, now.year, now.month, now.day, ora, minuto);

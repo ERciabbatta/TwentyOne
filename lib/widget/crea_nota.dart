@@ -4,7 +4,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Dialog modale per creare una nuova nota ricorrente (es. promemoria
+/// legato ad una routine): testo, giorni della settimana e fascia oraria
+/// di validità. Usato dalla pagina `note.dart`.
 class CreaNota extends StatefulWidget {
+  /// Indice (0=Lun ... 6=Dom) del giorno da preselezionare all'apertura,
+  /// tipicamente il giorno corrente.
   final int giornoPreselezionato;
 
   const CreaNota({super.key, required this.giornoPreselezionato});
@@ -14,12 +19,26 @@ class CreaNota extends StatefulWidget {
 }
 
 class _CreaNotaState extends State<CreaNota> {
+  /// Testo libero della nota inserito dall'utente.
   final TextEditingController _controllerTesto = TextEditingController();
+
+  /// Orario di inizio validità della nota, `null` finché non impostato.
   TimeOfDay? _orarioInizio;
+
+  /// Orario di fine validità della nota, `null` finché non impostato.
   TimeOfDay? _orarioFine;
+
+  /// Quale picker orario è attualmente aperto: `'inizio'`, `'fine'` o
+  /// `null` se nessuno (mostra il form principale).
   String? _pickerAperto;
+
+  /// Valore ore momentaneamente selezionato nella rotella del picker orario.
   int _oreSelezionate = 0;
+
+  /// Valore minuti momentaneamente selezionato nella rotella del picker orario.
   int _minutiSelezionati = 0;
+
+  /// Flag di selezione per ciascuno dei 7 giorni della settimana.
   late List<bool> _giorniSelezionati;
 
   final List<String> _giorni = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
@@ -30,6 +49,9 @@ class _CreaNotaState extends State<CreaNota> {
     _giorniSelezionati = List.generate(7, (i) => i == widget.giornoPreselezionato);
   }
 
+  /// Apre il picker orario a rotella per `'inizio'` o `'fine'`,
+  /// precaricando la selezione con l'orario già impostato (o quello
+  /// corrente se non ancora impostato).
   void _apriPicker(String quale) {
     final orario = quale == 'inizio' ? _orarioInizio : _orarioFine;
     setState(() {
@@ -39,6 +61,8 @@ class _CreaNotaState extends State<CreaNota> {
     });
   }
 
+  /// Salva l'orario selezionato nella rotella (inizio o fine, in base a
+  /// [_pickerAperto]) e richiude il picker tornando al form principale.
   void _confermaOrario() {
     final orario = TimeOfDay(hour: _oreSelezionate, minute: _minutiSelezionati);
     setState(() {
@@ -51,6 +75,7 @@ class _CreaNotaState extends State<CreaNota> {
     });
   }
 
+  /// Formatta un [TimeOfDay] come stringa `HH:MM`, oppure `--:--` se `null`.
   String _formatOrario(TimeOfDay? orario) {
     if (orario == null) return '--:--';
     final ore = orario.hour.toString().padLeft(2, '0');
@@ -58,6 +83,7 @@ class _CreaNotaState extends State<CreaNota> {
     return '$ore:$minuti';
   }
 
+  /// Mostra una SnackBar di errore con il messaggio indicato.
   void _mostraErrore(BuildContext context, String messaggio) {
     if (!context.mounted) return;
     final colors = AppColors.of(context);
@@ -69,6 +95,9 @@ class _CreaNotaState extends State<CreaNota> {
     );
   }
 
+  /// Valida i campi del form (testo, orari, giorni selezionati, assenza
+  /// di sovrapposizioni con note esistenti sugli stessi giorni) e, se
+  /// tutto è corretto, salva la nuova nota su Firestore e chiude il dialog.
   Future<void> _salvaNota(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -153,6 +182,8 @@ class _CreaNotaState extends State<CreaNota> {
     if (context.mounted) Navigator.pop(context);
   }
 
+  /// Costruisce una colonna a rotella scorrevole (usata per ore e minuti
+  /// nel picker orario), con l'elemento centrato evidenziato.
   Widget _scrollColonna({
     required int valore,
     required int max,
@@ -192,6 +223,9 @@ class _CreaNotaState extends State<CreaNota> {
     );
   }
 
+  /// Costruisce il picker orario inline (rotelle ore/minuti + pulsanti
+  /// Annulla/Conferma), mostrato al posto del form quando [_pickerAperto]
+  /// non è `null`.
   Widget _inlinePicker() {
     final colors = AppColors.of(context);
     return Column(
@@ -291,6 +325,9 @@ class _CreaNotaState extends State<CreaNota> {
     );
   }
 
+  /// Costruisce il dialog: mostra il form principale (testo, giorni,
+  /// selettori orario) oppure il picker orario inline, in base allo
+  /// stato di [_pickerAperto].
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);

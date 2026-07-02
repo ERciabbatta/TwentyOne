@@ -5,6 +5,8 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'package:twentyone/widget/servizio_notifiche.dart';
 
+/// Schermata per la compilazione del check-in giornaliero.
+/// L'utente risponde a domande sulla routine e sul mood attuale per aggiornare la streak e tenere traccia del progresso.
 class CheckIn extends StatefulWidget {
   const CheckIn({super.key});
 
@@ -13,14 +15,28 @@ class CheckIn extends StatefulWidget {
 }
 
 class _CheckInState extends State<CheckIn> {
+  // Stato della risposta alla domanda sulla routine (es. 0 = No, 1 = In parte, 2 = Sì)
   int? _rispostaRoutine;
+  
+  // Stato della risposta sulla scala del mood (1 a 5)
   int? _rispostaMood;
+  
+  // Indica se il salvataggio dei dati è in corso
   bool _caricamento = false;
+  
+  // Indica se il check-in è stato appena completato e salvato con successo
   bool _salvato = false;
+  
+  // Indica se il check-in per il giorno corrente è già stato completato precedentemente
   bool _giaCompletato = false;
+  
+  // Valore aggiornato della streak dell'utente
   int _nuovaStreak = 0;
+  
+  // Flag che indica se la streak si è azzerata a causa di giorni mancanti
   bool _streakRotta = false;
 
+  // Opzioni grafiche e di testo per la domanda sulle routine
   List<Map<String, dynamic>> get _opzioniRoutine {
     final colors = AppColors.of(context);
     return [
@@ -30,6 +46,7 @@ class _CheckInState extends State<CheckIn> {
     ];
   }
 
+  // Emoji e testi di supporto per la selezione del mood
   final List<String> _emoji      = ['😞', '😕', '😐', '🙂', '😄'];
   final List<String> _emojiLabel = ['Male', 'Così così', 'Neutro', 'Bene', 'Ottimo'];
 
@@ -39,14 +56,17 @@ class _CheckInState extends State<CheckIn> {
     _verificaCheckInOggi();
   }
 
+  /// Converte una data [DateTime] in una stringa chiave "YYYY-MM-DD"
   String _chiaveData(DateTime data) =>
       '${data.year}-${data.month.toString().padLeft(2, '0')}-${data.day.toString().padLeft(2, '0')}';
 
+  /// Ritorna la data di ieri nel formato stringa "YYYY-MM-DD"
   String _ieri() {
     final yesterday = DateTime.now().subtract(const Duration(days: 1));
     return _chiaveData(yesterday);
   }
 
+  /// Interroga Firestore per controllare se esiste già un check-in salvato per la data odierna.
   Future<void> _verificaCheckInOggi() async {
     final uid = Auth().currentUser?.uid;
     if (uid == null) return;
@@ -64,6 +84,9 @@ class _CheckInState extends State<CheckIn> {
     }
   }
 
+  /// Salva il check-in giornaliero dell'utente su Firestore.
+  /// Calcola e aggiorna la streak corrente e la migliore streak di sempre.
+  /// Al termine, annulla le notifiche di scadenza della streak programmative per la giornata corrente.
   Future<void> _salvaCheckIn() async {
     if (_rispostaRoutine == null || _rispostaMood == null) return;
 

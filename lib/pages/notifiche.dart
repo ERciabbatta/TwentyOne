@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/widget/servizio_notifiche.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata delle impostazioni di notifica.
+/// Consente all'utente di attivare o disattivare i vari canali di notifica
+/// (eventi, check-in serale, frasi motivazionali) tramite switch interattivi.
 class Notifiche extends StatefulWidget {
   const Notifiche({super.key});
 
@@ -11,11 +14,19 @@ class Notifiche extends StatefulWidget {
 }
 
 class _NotificheState extends State<Notifiche> {
+  // Stato dell'interruttore per le notifiche di promemoria eventi (note)
   bool _eventiAttivi = true;
+  
+  // Stato dell'interruttore per le notifiche di frasi motivazionali
   bool _motivazionaliAttive = true;
+  
+  // Stato dell'interruttore per il promemoria del check-in serale
   bool _checkInAttivo = true;
+  
+  // true mentre si caricano le preferenze da SharedPreferences
   bool _caricamento = true;
 
+  // Istanza del servizio notifiche per leggere/scrivere le preferenze
   final _service = NotificationService();
 
   @override
@@ -24,6 +35,7 @@ class _NotificheState extends State<Notifiche> {
     _caricaPreferenze();
   }
 
+  /// Carica da SharedPreferences le preferenze di attivazione di ciascun tipo di notifica.
   Future<void> _caricaPreferenze() async {
     final eventi = await _service.getEventiAttivi();
     final motivazionali = await _service.getMotivazionaliAttive();
@@ -130,6 +142,8 @@ class _NotificheState extends State<Notifiche> {
   }
 }
 
+/// Widget riutilizzabile che mostra una riga con icona, titolo, descrizione
+/// e uno [Switch] per attivare/disattivare una categoria di notifiche.
 class _ToggleTile extends StatelessWidget {
   final IconData icon;
   final String label;

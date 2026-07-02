@@ -5,6 +5,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/crea_nota.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata del diario delle note.
+/// Mostra le note settimanali dell'utente con possibilità di filtrarle per giorno
+/// e di aggiungerne di nuove tramite il widget [CreaNota].
 class Note extends StatefulWidget {
   const Note({super.key});
 
@@ -13,15 +16,21 @@ class Note extends StatefulWidget {
 }
 
 class _NoteState extends State<Note> {
+  // Abbreviazioni dei giorni della settimana per il selettore orizzontale
   final List<String> _giorni = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+  
+  // Indice del giorno della settimana attualmente selezionato (0 = lunedì)
   late int _giornoSelezionato;
 
   @override
   void initState() {
     super.initState();
+    // Pre-seleziona il giorno corrente all'apertura della schermata
     _giornoSelezionato = DateTime.now().weekday - 1;
   }
 
+  /// Stream che emette in tempo reale le note dell'utente da Firestore,
+  /// ordinate per orario di inizio crescente.
   Stream<QuerySnapshot> _noteStream() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return const Stream.empty();

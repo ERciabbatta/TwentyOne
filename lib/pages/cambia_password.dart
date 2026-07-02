@@ -4,6 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata per la modifica della password dell'utente.
+/// Consente di richiedere l'invio di una e-mail di reset all'indirizzo associato
+/// all'utente attualmente autenticato.
 class CambioPassword extends StatefulWidget {
   const CambioPassword({super.key});
 
@@ -12,10 +15,17 @@ class CambioPassword extends StatefulWidget {
 }
 
 class _CambioPasswordState extends State<CambioPassword> {
+  // Indica se l'email di ripristino password è stata inviata con successo
   bool _inviato = false;
+  
+  // Indica se è in corso la richiesta di rete a Firebase
   bool _caricamento = false;
+  
+  // Messaggio d'errore restituito da Firebase in caso di problemi
   String? _errore;
 
+  /// Invia l'e-mail di reset della password all'utente corrente
+  /// utilizzando il servizio `FirebaseAuth`.
   Future<void> _inviaResetEmail() async {
     final email = Auth().currentUser?.email;
     if (email == null) return;

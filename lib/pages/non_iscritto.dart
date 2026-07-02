@@ -3,9 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:twentyone/pages/login_register.dart';
 import 'package:twentyone/widget/app_colors.dart';
 
+/// Schermata di benvenuto mostrata agli utenti non autenticati.
+/// Presenta il brand dell'app e propone i pulsanti per accedere o registrarsi.
 class NonIscritto extends StatelessWidget {
   const NonIscritto({super.key});
 
+  /// Naviga verso la schermata [LoginRegister] con una transizione di dissolvenza.
+  /// [startAsLogin] determina se aprire in modalità login o registrazione.
   void _navigaConDissolvenza(BuildContext context, {required bool startAsLogin}) {
     Navigator.of(context).push(PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>

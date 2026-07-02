@@ -13,13 +13,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///     builder: (context, _) => MaterialApp(themeMode: themeProvider.themeMode, ...),
 ///   )
 class ThemeProvider extends ChangeNotifier {
+  /// Chiave SharedPreferences sotto cui è salvata la preferenza di tema.
   static const _key = 'theme_mode';
 
   ThemeMode _themeMode = ThemeMode.system;
+
+  /// Modalità di tema attualmente attiva (chiaro/scuro/sistema).
   ThemeMode get themeMode => _themeMode;
 
+  /// `true` se la modalità attiva è quella scura.
   bool get isDark => _themeMode == ThemeMode.dark;
 
+  /// Carica la preferenza di tema salvata in precedenza (default:
+  /// chiaro se non è mai stata impostata) e notifica gli ascoltatori.
+  /// Va chiamato prima di `runApp`.
   Future<void> caricaPreferenza() async {
     final prefs = await SharedPreferences.getInstance();
     final salvato = prefs.getString(_key);
@@ -34,6 +41,8 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Imposta una nuova modalità di tema, notifica gli ascoltatori (che
+  /// aggiornano subito la UI) e persiste la scelta su SharedPreferences.
   Future<void> setThemeMode(ThemeMode mode) async {
     if (_themeMode == mode) return;
     _themeMode = mode;

@@ -10,6 +10,9 @@ import 'package:twentyone/pages/statistiche.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'package:twentyone/main.dart';
 
+/// Schermata del profilo utente.
+/// Mostra le informazioni dell'account, l'obiettivo personale,
+/// le impostazioni (tema, notifiche, password) e le azioni (logout, eliminazione account).
 class Profilo extends StatefulWidget {
   const Profilo({super.key});
 
@@ -18,7 +21,10 @@ class Profilo extends StatefulWidget {
 }
 
 class _ProfiloState extends State<Profilo> {
+  // Utente Firebase attualmente autenticato
   final User? user = Auth().currentUser;
+  
+  // Testo dell'obiettivo personale dell'utente
   String _obiettivo = '';
 
   @override
@@ -27,6 +33,7 @@ class _ProfiloState extends State<Profilo> {
     _caricaObiettivo();
   }
 
+  /// Recupera l'obiettivo dell'utente da Firestore per mostrarlo nella schermata profilo.
   Future<void> _caricaObiettivo() async {
     final uid = user?.uid;
     if (uid == null) return;
@@ -38,6 +45,7 @@ class _ProfiloState extends State<Profilo> {
     if (mounted) setState(() => _obiettivo = ob);
   }
 
+  /// Effettua il logout dell'utente corrente tramite Firebase Auth.
   Future<void> signOut() async {
     await Auth().signOut();
   }
@@ -466,6 +474,7 @@ class _ProfiloState extends State<Profilo> {
     );
   }
 
+  /// Formatta una data [DateTime] nel formato leggibile "GG/MM/AAAA".
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/'
         '${date.month.toString().padLeft(2, '0')}/'
@@ -473,6 +482,7 @@ class _ProfiloState extends State<Profilo> {
   }
 }
 
+/// Card informativa in sola lettura per mostrare un dato del profilo (es. email, data di registrazione).
 class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -509,6 +519,9 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
+/// Tile per alternare tra tema chiaro e tema scuro.
+/// Ascolta le modifiche di [themeProvider] tramite [ListenableBuilder]
+/// per aggiornare lo stato dello switch in tempo reale.
 class _ThemeToggleTile extends StatelessWidget {
   final AppColors colors;
 
@@ -558,6 +571,8 @@ class _ThemeToggleTile extends StatelessWidget {
   }
 }
 
+/// Tile tappabile per azioni di navigazione delle impostazioni (es. Notifiche, Cambia password).
+/// Mostra un'icona, un'etichetta testuale e una freccia di navigazione.
 class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
