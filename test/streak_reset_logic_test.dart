@@ -77,6 +77,33 @@ void main() {
       );
       expect(risultato, isFalse);
     });
+
+    test('non azzera se valutato durante il giorno successivo (es. alle 10:00) e ieri è stato completato', () {
+      final risultato = StreakResetLogic.shouldResetStreak(
+        now: DateTime(2026, 6, 15, 10, 0),
+        lastActiveDateKey: '2026-06-14',
+        streak: 3,
+      );
+      expect(risultato, isFalse);
+    });
+
+    test('non azzera se valutato nel pomeriggio (es. alle 17:45) e ieri è stato completato', () {
+      final risultato = StreakResetLogic.shouldResetStreak(
+        now: DateTime(2026, 6, 15, 17, 45),
+        lastActiveDateKey: '2026-06-14',
+        streak: 3,
+      );
+      expect(risultato, isFalse);
+    });
+
+    test('azzera se valutato durante il giorno successivo (es. alle 10:00) e ieri NON è stato completato', () {
+      final risultato = StreakResetLogic.shouldResetStreak(
+        now: DateTime(2026, 6, 15, 10, 0),
+        lastActiveDateKey: '2026-06-13',
+        streak: 3,
+      );
+      expect(risultato, isTrue);
+    });
   });
 
   group('StreakResetLogic.shouldSendReminder', () {
