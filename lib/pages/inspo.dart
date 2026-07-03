@@ -24,9 +24,6 @@ class _InspoState extends State<Inspo> {
   // Indici delle citazioni salvate tra i preferiti dall'utente
   final Set<int> _favorites = {};
   
-  // true una volta terminato il caricamento dei preferiti da Firestore
-  bool _favoritiCaricati = false;
-
   @override
   void initState() {
     super.initState();
@@ -45,7 +42,6 @@ class _InspoState extends State<Inspo> {
     if (mounted) {
       setState(() {
         _favorites.addAll(preferiti);
-        _favoritiCaricati = true;
       });
     }
   }

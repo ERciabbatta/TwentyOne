@@ -320,17 +320,19 @@ class _CompletamentoState extends State<Completamento>
       backgroundColor: colors.background,
       body: Stack(
         children: [
-          AnimatedBuilder(
-            animation: _confettiController,
-            builder: (context, child) {
-              return CustomPaint(
-                painter: _ConfettiPainter(
-                  particles: _particles,
-                  progress: _confettiController.value,
-                ),
-                size: Size.infinite,
-              );
-            },
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _confettiController,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: _ConfettiPainter(
+                    particles: _particles,
+                    progress: _confettiController.value,
+                  ),
+                  size: Size.infinite,
+                );
+              },
+            ),
           ),
           if (_loading)
             Center(child: CircularProgressIndicator(color: colors.accent))

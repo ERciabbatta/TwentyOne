@@ -1,32 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:twentyone/widget/app_colors.dart';
+
 import 'package:twentyone/pages/home.dart';
 import 'package:twentyone/pages/note.dart';
 import 'package:twentyone/pages/inspo.dart';
 import 'package:twentyone/pages/profilo.dart';
 
-/// Versione storica (snake_case) della shell di navigazione principale.
-///
-/// Logicamente equivalente a `MyBottomBar` (versione PascalCase più
-/// recente), ma con colori fissi (non segue il tema chiaro/scuro tramite
-/// `AppColors`). Mantenuta per compatibilità con import esistenti nel
-/// resto del codice.
-// ignore: camel_case_types
-class my_bottom_bar extends StatefulWidget {
-  const my_bottom_bar({super.key});
+/// Shell principale dell'app dopo il login: gestisce la navigazione fra
+/// le quattro sezioni (Home, Note, Profilo, Ispirati) tramite una barra
+/// di navigazione inferiore custom.
+class MyBottomBar extends StatefulWidget {
+  const MyBottomBar({super.key});
 
   @override
-  State<my_bottom_bar> createState() => _my_bottom_barState();
+  State<MyBottomBar> createState() => _MyBottomBarState();
 }
 
-// ignore: camel_case_types
-class _my_bottom_barState extends State<my_bottom_bar> {
+class _MyBottomBarState extends State<MyBottomBar> {
   /// Indice della tab attualmente visibile (0=Home, 1=Note, 2=Profilo, 3=Ispirati).
   int _currentPage = 0;
 
-  // Una Key diversa per ogni "visita" alla tab Home forza la ricostruzione
-  // del widget (e quindi initState/_caricaDatiUtente) ogni volta che torni
-  // su quella tab, cosi' streak/obiettivo/giorni rimanenti sono sempre aggiornati.
+  /// Contatore incrementato ad ogni rientro sulla tab Home: usato come
+  /// parte della Key del widget Home per forzarne la ricostruzione completa
+  /// (e quindi il refresh dei dati) ogni volta che l'utente ci torna.
   int _homeRebuildCount = 0;
 
   /// Elenco ordinato delle pagine associate alle tab della barra.
@@ -73,12 +70,13 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colors.card,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: colors.shadow.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, -4),
           ),
@@ -123,7 +121,8 @@ class _BottomBar extends StatelessWidget {
 }
 
 /// Singola voce della barra di navigazione: mostra un'icona e, solo se
-/// [selected] è vero, anche l'etichetta testuale accanto.
+/// [selected] è vero, anche l'etichetta testuale accanto (per risparmiare
+/// spazio quando la voce non è attiva).
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -139,6 +138,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -146,7 +146,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE8EEF7) : Colors.transparent,
+          color: selected ? colors.surfaceSelected : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -154,9 +154,7 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               size: 20,
-              color: selected
-                  ? const Color(0xFF7A9CC6)
-                  : const Color(0xFF8A9BB5),
+              color: selected ? colors.accent : colors.textSecondary,
             ),
             if (selected) ...[
               const SizedBox(width: 6),
@@ -165,7 +163,7 @@ class _NavItem extends StatelessWidget {
                 style: GoogleFonts.playfairDisplay(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF3A4A5C),
+                  color: colors.textPrimary,
                 ),
               ),
             ],

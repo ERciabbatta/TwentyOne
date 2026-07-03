@@ -151,13 +151,6 @@ class _HomeState extends State<Home> {
   String _dateKey(DateTime date) =>
       '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
 
-  /// Calcola la differenza in giorni tra due date [DateTime] (ignorando l'orario).
-  int _dayDifference(DateTime a, DateTime b) {
-    final da = DateTime(a.year, a.month, a.day);
-    final db = DateTime(b.year, b.month, b.day);
-    return db.difference(da).inDays;
-  }
-
   /// Restituisce l'indice (0 = lunedì … 6 = domenica) del giorno corrente.
   int get _giornoOggi => DateTime.now().weekday - 1;
 

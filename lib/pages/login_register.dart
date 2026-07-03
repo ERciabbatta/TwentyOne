@@ -248,7 +248,7 @@ class _LoginRegisterState extends State<LoginRegister> {
                       : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
+                      SizedBox(
                         width: 20,
                         height: 20,
                         child: Center(

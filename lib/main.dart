@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/pages/checkin.dart';
 import 'package:twentyone/pages/non_iscritto.dart';
 import 'package:twentyone/pages/obiettivo.dart';
-import 'package:twentyone/widget/MyBottomBar.dart';
+import 'package:twentyone/widget/my_bottom_bar.dart';
 import 'package:twentyone/widget/servizio_notifiche.dart';
 import 'package:twentyone/widget/firebase_options.dart';
 import 'package:twentyone/widget/app_theme.dart';

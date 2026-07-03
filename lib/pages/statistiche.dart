@@ -313,7 +313,7 @@ class _StatisticheState extends State<Statistiche> {
               barWidth: 2.5,
               dotData: FlDotData(
                 show: true,
-                getDotPainter: (_, __, ___, ____) => FlDotCirclePainter(
+                getDotPainter: (_, _, _, _) => FlDotCirclePainter(
                   radius: 4,
                   color: colors.accent,
                   strokeWidth: 0,
@@ -410,7 +410,7 @@ class _StatisticheState extends State<Statistiche> {
               ),
               barTouchData: BarTouchData(
                 touchTooltipData: BarTouchTooltipData(
-                  getTooltipItem: (group, _, rod, __) {
+                  getTooltipItem: (group, _, rod, _) {
                     final g = slice[group.x];
                     if (!g.completato) return null;
                     const labels = ['Sì ✅', 'In parte ⚡', 'No ❌'];

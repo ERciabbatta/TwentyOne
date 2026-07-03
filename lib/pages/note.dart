@@ -146,7 +146,7 @@ class _NoteState extends State<Note> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: note.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final nota = note[index].data() as Map<String, dynamic>;
                     final docId = note[index].id;
