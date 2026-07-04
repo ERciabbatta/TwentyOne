@@ -114,6 +114,7 @@ class _CheckInState extends State<CheckIn> {
       final lastDateStr = data?['lastActiveDate'] as String?;
       final currentStreak = data?['streak'] as int? ?? 0;
       final bestStreak = data?['bestStreak'] as int? ?? 0;
+    final dataInizioStr = data?['dataInizio'] as String?;
 
       int nuovaStreak;
       if (lastDateStr == null) {

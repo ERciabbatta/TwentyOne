@@ -9,6 +9,7 @@ import 'package:twentyone/pages/obiettivo.dart';
 import 'package:twentyone/pages/statistiche.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'package:twentyone/main.dart';
+import 'package:twentyone/widget/badges_data.dart';
 
 /// Schermata del profilo utente.
 /// Mostra le informazioni dell'account, l'obiettivo personale,
@@ -23,6 +24,7 @@ class Profilo extends StatefulWidget {
 class _ProfiloState extends State<Profilo> {
   // Utente Firebase attualmente autenticato
   final User? user = Auth().currentUser;
+  List<String> _badges = [];
   
   // Testo dell'obiettivo personale dell'utente
   String _obiettivo = '';
@@ -31,6 +33,7 @@ class _ProfiloState extends State<Profilo> {
   void initState() {
     super.initState();
     _caricaObiettivo();
+    _caricaBadge();
   }
 
   /// Recupera l'obiettivo dell'utente da Firestore per mostrarlo nella schermata profilo.
@@ -44,6 +47,19 @@ class _ProfiloState extends State<Profilo> {
     final ob = doc.data()?['obiettivo'] as String? ?? '';
     if (mounted) setState(() => _obiettivo = ob);
   }
+
+  /// Carica i badge sbloccati dell'utente da Firestore.
+  Future<void> _caricaBadge() async {
+    final uid = user?.uid;
+    if (uid == null) return;
+    final doc = await FirebaseFirestore.instance
+        .collection('utenti')
+        .doc(uid)
+        .get();
+    final badges = List<String>.from(doc.data()?['badges'] ?? []);
+    if (mounted) setState(() => _badges = badges);
+  }
+
 
   /// Effettua il logout dell'utente corrente tramite Firebase Auth.
   Future<void> signOut() async {
@@ -256,6 +272,59 @@ class _ProfiloState extends State<Profilo> {
 
             _ThemeToggleTile(colors: colors),
             const SizedBox(height: 10),
+
+          // Badge Section
+          const SizedBox(height: 32),
+          Text(
+            'Badge',
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+            ),
+            itemCount: allBadges.length,
+            itemBuilder: (context, index) {
+              final badge = allBadges[index];
+              final unlocked = _badges.contains(badge.id);
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: unlocked ? colors.accent.withValues(alpha: 0.2) : colors.surface,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      badge.icon,
+                      size: 28,
+                      color: unlocked ? colors.accent : colors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    badge.name,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: unlocked ? colors.textPrimary : colors.textSecondary,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 24),
 
             _ActionTile(
               icon: Icons.info_outline_rounded,
