@@ -637,7 +637,68 @@ class _ThemeToggleTile extends StatelessWidget {
         );
       },
     );
+    /// Show a dialog explaining the badge when tapped
+  void _mostraDialogBadge(String badgeNome, String badgeDescrizione) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final colors = AppColors.of(context);
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            '🏆 Nuovo Badge!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.accent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.stars_rounded, color: colors.accent, size: 60),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                badgeNome,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badgeDescrizione,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Fantastico!',
+                style: TextStyle(color: colors.accent, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+}
 }
 
 /// Tile tappabile per azioni di navigazione delle impostazioni (es. Notifiche, Cambia password).
