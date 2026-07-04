@@ -298,27 +298,27 @@ class _ProfiloState extends State<Profilo> {
               final unlocked = _badges.contains(badge.id);
               return Column(
                 mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: unlocked ? colors.accent.withValues(alpha: 0.2) : colors.surface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      badge.icon,
-                      size: 28,
-                      color: unlocked ? colors.accent : colors.textSecondary,
+                children: [ // Tapping a badge opens a dialog showing its name and description (how the user receives the badge)
+                  GestureDetector(
+                    onTap: () => _mostraDialogBadge(badge.name, badge.description),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: unlocked ? colors.accent.withValues(alpha: 0.2) : colors.surface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        badge.icon,
+                        size: 28,
+                        color: unlocked ? colors.accent : colors.textSecondary,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     badge.name,
+                    style: TextStyle(color: unlocked ? colors.accent : colors.textSecondary, fontSize: 12),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: unlocked ? colors.textPrimary : colors.textSecondary,
-                    ),
                   ),
                 ],
               );
