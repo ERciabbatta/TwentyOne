@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/auth.dart';
 import 'package:twentyone/widget/app_colors.dart';
 import 'package:twentyone/widget/servizio_notifiche.dart';
+import 'package:twentyone/widget/servizio_widget.dart';
+import 'package:twentyone/widget/badges_data.dart';
+
 
 /// Schermata per la compilazione del check-in giornaliero.
 /// L'utente risponde a domande sulla routine e sul mood attuale per aggiornare la streak e tenere traccia del progresso.
@@ -130,6 +133,66 @@ class _CheckInState extends State<CheckIn> {
         'bestStreak': nuovaStreak > bestStreak ? nuovaStreak : bestStreak,
       }, SetOptions(merge: true));
 
+      // --- LOGICA BADGES ---
+      final currentBadges = List<String>.from(data?['badges'] ?? []);
+      final sbloccatiOra = <String>[];
+
+      // Verifiche basate su streak
+      if (nuovaStreak >= 3 && !currentBadges.contains('inizio_forte')) {
+        sbloccatiOra.add('inizio_forte');
+      }
+      if (nuovaStreak >= 7 && !currentBadges.contains('costanza')) {
+        sbloccatiOra.add('costanza');
+      }
+      if (nuovaStreak >= 14 && !currentBadges.contains('quasi_arrivato')) {
+        sbloccatiOra.add('quasi_arrivato');
+      }
+      if (nuovaStreak >= 21 && !currentBadges.contains('trionfo_21')) {
+        sbloccatiOra.add('trionfo_21');
+      }
+
+      // Verifica basata su mood (3 check-in consecutivi con mood >= 3, ovvero Bene o Ottimo)
+      if (!currentBadges.contains('mente_serena')) {
+        final lastCheckinsSnap = await userDoc.collection('checkin')
+            .orderBy('timestamp', descending: true)
+            .limit(3)
+            .get();
+        if (lastCheckinsSnap.docs.length >= 3) {
+          bool tuttiPositivi = true;
+          for (final doc in lastCheckinsSnap.docs) {
+            final m = doc.data()['mood'] as int?;
+            if (m == null || m < 3) {
+              tuttiPositivi = false;
+              break;
+            }
+          }
+          if (tuttiPositivi) {
+            sbloccatiOra.add('mente_serena');
+          }
+        }
+      }
+
+      if (sbloccatiOra.isNotEmpty) {
+        currentBadges.addAll(sbloccatiOra);
+        await userDoc.set({
+          'badges': currentBadges,
+        }, SetOptions(merge: true));
+      }
+
+      // Aggiorna widget
+      int giorniRimanenti = 21;
+      if (dataInizioStr != null) {
+        try {
+          final dataInizio = DateTime.parse(dataInizioStr);
+          final oggiDt = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+          final inizio = DateTime(dataInizio.year, dataInizio.month, dataInizio.day);
+          final passati = oggiDt.difference(inizio).inDays;
+          final rim = 21 - passati;
+          giorniRimanenti = rim < 0 ? 0 : rim;
+        } catch (_) {}
+      }
+      await ServizioWidget.aggiornaWidget(streak: nuovaStreak, giorniRimanenti: giorniRimanenti);
+
       if (mounted) {
         setState(() {
           _nuovaStreak = nuovaStreak;
@@ -137,6 +200,12 @@ class _CheckInState extends State<CheckIn> {
         });
         // Check-in completato: cancella i promemoria di scadenza ancora in coda
         await NotificationService().cancellaStreakDeadline();
+
+        // Mostra popup per ogni badge sbloccato
+        for (final bId in sbloccatiOra) {
+          final badge = allBadges.firstWhere((b) => b.id == bId);
+          _mostraDialogBadge(badge.name, badge.description);
+        }
       }
 
       // Check-in completato: cancella i promemoria di scadenza streak
@@ -152,6 +221,68 @@ class _CheckInState extends State<CheckIn> {
       if (mounted) setState(() => _caricamento = false);
     }
   }
+
+  /// Mostra un popup celebrativo al sblocco di un nuovo badge
+  void _mostraDialogBadge(String badgeNome, String badgeDescrizione) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final colors = AppColors.of(context);
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            '🏆 Nuovo Badge!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.accent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.stars_rounded, color: colors.accent, size: 60),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                badgeNome,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badgeDescrizione,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Fantastico!',
+                style: TextStyle(color: colors.accent, fontWeight: FontWeight.bold),
+              ),
+            )
+          ],
+        );
+      },
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {

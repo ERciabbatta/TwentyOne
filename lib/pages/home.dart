@@ -8,6 +8,7 @@ import 'package:twentyone/widget/auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:twentyone/widget/quotes_data.dart';
 import 'package:twentyone/widget/app_colors.dart';
+import 'package:twentyone/widget/servizio_widget.dart';
 
 /// Dashboard principale dell'applicazione.
 /// Mostra la streak corrente, i giorni rimanenti al completamento del ciclo di 21 giorni,
@@ -59,6 +60,8 @@ class _HomeState extends State<Home> {
         _mostraBottoneCheckin = mostraBtn;
         _obiettivo            = obiettivo;
       });
+      // Aggiorna widget homescreen
+      ServizioWidget.aggiornaWidget(streak: streak, giorniRimanenti: rimanenti);
     }
   }
 

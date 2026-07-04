@@ -179,6 +179,85 @@ class _CreaNotaState extends State<CreaNota> {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
+    // --- CONTROLLO BADGE RIFLESSIVO ---
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('utenti').doc(user.uid);
+      final userSnap = await userDoc.get();
+      final userData = userSnap.data();
+      final currentBadges = List<String>.from(userData?['badges'] ?? []);
+
+      if (!currentBadges.contains('riflessivo')) {
+        final noteCountSnap = await userDoc.collection('note').get();
+        if (noteCountSnap.docs.length >= 5) {
+          currentBadges.add('riflessivo');
+          await userDoc.set({
+            'badges': currentBadges,
+          }, SetOptions(merge: true));
+
+          if (context.mounted) {
+            // Mostra dialog celebrativo
+            await showDialog(
+              context: context,
+              builder: (context) {
+                final colors = AppColors.of(context);
+                return AlertDialog(
+                  backgroundColor: colors.surface,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Text(
+                    '🏆 Nuovo Badge!',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.playfairDisplay(
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colors.accent.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.stars_rounded, color: colors.accent, size: 60),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Riflessivo',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Scrivi almeno 5 note personali.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: colors.textSecondary, fontSize: 14),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Fantastico!',
+                        style: TextStyle(color: colors.accent, fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  ],
+                );
+              },
+            );
+          }
+        }
+      }
+    } catch (_) {}
+
     if (context.mounted) Navigator.pop(context);
   }
 
