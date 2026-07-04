@@ -25,7 +25,7 @@ class _ProfiloState extends State<Profilo> {
   // Utente Firebase attualmente autenticato
   final User? user = Auth().currentUser;
   List<String> _badges = [];
-  
+
   // Testo dell'obiettivo personale dell'utente
   String _obiettivo = '';
 
@@ -59,7 +59,6 @@ class _ProfiloState extends State<Profilo> {
     final badges = List<String>.from(doc.data()?['badges'] ?? []);
     if (mounted) setState(() => _badges = badges);
   }
-
 
   /// Effettua il logout dell'utente corrente tramite Firebase Auth.
   Future<void> signOut() async {
@@ -273,58 +272,59 @@ class _ProfiloState extends State<Profilo> {
             _ThemeToggleTile(colors: colors),
             const SizedBox(height: 10),
 
-          // Badge Section
-          const SizedBox(height: 32),
-          Text(
-            'Badge',
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: colors.textPrimary,
+            // Badge Section
+            const SizedBox(height: 32),
+            Text(
+              'Badge',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-            ),
-            itemCount: allBadges.length,
-            itemBuilder: (context, index) {
-              final badge = allBadges[index];
-              final unlocked = _badges.contains(badge.id);
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [ // Tapping a badge opens a dialog showing its name and description (how the user receives the badge)
-                  GestureDetector(
-                    onTap: () => _mostraDialogBadge(badge.name, badge.description),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: unlocked ? colors.accent.withValues(alpha: 0.2) : colors.surface,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        badge.icon,
-                        size: 28,
-                        color: unlocked ? colors.accent : colors.textSecondary,
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisSpacing: 12,
+                crossAxisSpacing: 12,
+              ),
+              itemCount: allBadges.length,
+              itemBuilder: (context, index) {
+                final badge = allBadges[index];
+                final unlocked = _badges.contains(badge.id);
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Tapping a badge opens a dialog showing its name and description
+                    GestureDetector(
+                      onTap: () => _mostraDialogBadge(badge.name, badge.description),
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: unlocked ? colors.accent.withValues(alpha: 0.2) : colors.surface,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          badge.icon,
+                          size: 28,
+                          color: unlocked ? colors.accent : colors.textSecondary,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    badge.name,
-                    style: TextStyle(color: unlocked ? colors.accent : colors.textSecondary, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 24),
+                    const SizedBox(height: 4),
+                    Text(
+                      badge.name,
+                      style: TextStyle(color: unlocked ? colors.accent : colors.textSecondary, fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 24),
 
             _ActionTile(
               icon: Icons.info_outline_rounded,
@@ -549,6 +549,67 @@ class _ProfiloState extends State<Profilo> {
         '${date.month.toString().padLeft(2, '0')}/'
         '${date.year}';
   }
+
+  /// Mostra un dialog con nome e descrizione del badge selezionato.
+  void _mostraDialogBadge(String badgeNome, String badgeDescrizione) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final colors = AppColors.of(context);
+        return AlertDialog(
+          backgroundColor: colors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            '🏆 Nuovo Badge!',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.accent.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.stars_rounded, color: colors.accent, size: 60),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                badgeNome,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badgeDescrizione,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Fantastico!',
+                style: TextStyle(color: colors.accent, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 /// Card informativa in sola lettura per mostrare un dato del profilo (es. email, data di registrazione).
@@ -637,68 +698,7 @@ class _ThemeToggleTile extends StatelessWidget {
         );
       },
     );
-    /// Show a dialog explaining the badge when tapped
-  void _mostraDialogBadge(String badgeNome, String badgeDescrizione) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final colors = AppColors.of(context);
-        return AlertDialog(
-          backgroundColor: colors.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            '🏆 Nuovo Badge!',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.playfairDisplay(
-              fontWeight: FontWeight.bold,
-              color: colors.textPrimary,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: colors.accent.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.stars_rounded, color: colors.accent, size: 60),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                badgeNome,
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                badgeDescrizione,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: colors.textSecondary, fontSize: 14),
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                'Fantastico!',
-                style: TextStyle(color: colors.accent, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
-
-}
 }
 
 /// Tile tappabile per azioni di navigazione delle impostazioni (es. Notifiche, Cambia password).
