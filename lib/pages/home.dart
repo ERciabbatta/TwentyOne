@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 import 'package:twentyone/pages/calendario.dart';
 import 'package:twentyone/pages/completamento.dart';
 import 'package:twentyone/pages/checkin.dart';
@@ -25,16 +26,16 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   // Numero consecutivo di giorni con check-in eseguito (streak corrente)
   int _streakCount = 0;
-  
+
   // Giorni ancora necessari a completare il ciclo di 21 giorni
   int _giorniRimanenti = 21;
-  
+
   // true se l'utente ha completato tutti e 21 i giorni
   bool _cicloCompletato = false;
-  
+
   // true se va mostrato il pulsante per effettuare il check-in (dopo le 22:00)
   bool _mostraBottoneCheckin = false;
-  
+
   // Testo dell'obiettivo personale dell'utente
   String _obiettivo = '';
 
@@ -427,6 +428,11 @@ class _HomeState extends State<Home> {
     );
   }
 
+  /// Ricarica i dati della home quando l'utente esegue il gesto di pull-to-refresh.
+  Future<void> _handleRefresh() async {
+    await _caricaDatiUtente();
+  }
+
   @override
   Widget build(BuildContext context) {
     final quoteOfDay = getQuoteOfDay();
@@ -450,137 +456,176 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _noteStream(),
-        builder: (context, snapshot) {
-          final mattina    = <Map<String, dynamic>>[];
-          final pomeriggio = <Map<String, dynamic>>[];
-          final sera       = <Map<String, dynamic>>[];
+      // ScrollConfiguration rimuove il glow blu di default su Android
+      // e lo sostituisce con un bagliore intonato al colore accent dell'app.
+      body: ScrollConfiguration(
+        behavior: _AccentScrollBehavior(colors.accent),
+        child: LiquidPullToRefresh(
+          onRefresh: _handleRefresh,
+          // Colore dell'onda di pull-to-refresh: usa l'accent dell'app
+          color: colors.accent,
+          // Colore di sfondo dietro l'onda: usa il background dell'app
+          backgroundColor: colors.background,
+          height: 90,
+          animSpeedFactor: 2,
+          showChildOpacityTransition: false,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: _noteStream(),
+            builder: (context, snapshot) {
+              final mattina    = <Map<String, dynamic>>[];
+              final pomeriggio = <Map<String, dynamic>>[];
+              final sera       = <Map<String, dynamic>>[];
 
-          if (snapshot.hasData) {
-            for (final doc in snapshot.data!.docs) {
-              final nota   = doc.data() as Map<String, dynamic>;
-              final giorni = List<int>.from(nota['giorni'] ?? []);
-              if (!giorni.contains(_giornoOggi)) continue;
-              final fascia = _getFasciaOraria(nota['inizio'] ?? '');
-              if (fascia == 'mattina'){
-                mattina.add(nota);
+              if (snapshot.hasData) {
+                for (final doc in snapshot.data!.docs) {
+                  final nota   = doc.data() as Map<String, dynamic>;
+                  final giorni = List<int>.from(nota['giorni'] ?? []);
+                  if (!giorni.contains(_giornoOggi)) continue;
+                  final fascia = _getFasciaOraria(nota['inizio'] ?? '');
+                  if (fascia == 'mattina'){
+                    mattina.add(nota);
+                  }
+                  else if (fascia == 'pomeriggio') {
+                    pomeriggio.add(nota);
+                  }
+                  else {
+                    sera.add(nota);
+                  }
+                }
+
+                for (final lista in [mattina, pomeriggio, sera]) {
+                  lista.sort((a, b) {
+                    final aMin = _getOra(a['inizio'] ?? '00:00') * 60 +
+                        (int.tryParse((a['inizio'] ?? '00:00').split(':')[1]) ?? 0);
+                    final bMin = _getOra(b['inizio'] ?? '00:00') * 60 +
+                        (int.tryParse((b['inizio'] ?? '00:00').split(':')[1]) ?? 0);
+                    return aMin.compareTo(bMin);
+                  });
+                }
               }
-              else if (fascia == 'pomeriggio') {
-                pomeriggio.add(nota);
-              }
-              else {
-                sera.add(nota);
-              }
-            }
 
-            for (final lista in [mattina, pomeriggio, sera]) {
-              lista.sort((a, b) {
-                final aMin = _getOra(a['inizio'] ?? '00:00') * 60 +
-                    (int.tryParse((a['inizio'] ?? '00:00').split(':')[1]) ?? 0);
-                final bMin = _getOra(b['inizio'] ?? '00:00') * 60 +
-                    (int.tryParse((b['inizio'] ?? '00:00').split(':')[1]) ?? 0);
-                return aMin.compareTo(bMin);
-              });
-            }
-          }
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_cicloCompletato) ...[
-                  _buildBannerCompletamento(),
-                  const SizedBox(height: 16),
-                ],
-
-                Row(
+              return SingleChildScrollView(
+                // AlwaysScrollableScrollPhysics è indispensabile per il pull-to-refresh:
+                // senza physics lo scroll non si attiva quando il contenuto è più corto
+                // dello schermo. BouncingScrollPhysics dà l'effetto elastico stile iOS.
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildObiettivoCard(
-                      Icons.local_fire_department_outlined,
-                      'Streak', '$_streakCount', 'GIORNI',
+                    if (_cicloCompletato) ...[
+                      _buildBannerCompletamento(),
+                      const SizedBox(height: 16),
+                    ],
+
+                    Row(
+                      children: [
+                        _buildObiettivoCard(
+                          Icons.local_fire_department_outlined,
+                          'Streak', '$_streakCount', 'GIORNI',
+                        ),
+                        const SizedBox(width: 12),
+                        _buildObiettivoCard(
+                          Icons.star_border,
+                          'Obiettivo 21 giorni', '$_giorniRimanenti', 'GIORNI RIMANENTI',
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    _buildObiettivoCard(
-                      Icons.star_border,
-                      'Obiettivo 21 giorni', '$_giorniRimanenti', 'GIORNI RIMANENTI',
+                    const SizedBox(height: 12),
+
+                    if (_obiettivo.isNotEmpty) ...[
+                      _buildObiettivoStrip(),
+                      const SizedBox(height: 12),
+                    ],
+
+                    if (_mostraBottoneCheckin) ...[
+                      _buildBannerCheckin(),
+                      const SizedBox(height: 12),
+                    ],
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            '\u201C',
+                            style: TextStyle(
+                                fontSize: 36, color: colors.accent, height: 0.8),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            quoteOfDay.text,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colors.textPrimary,
+                              letterSpacing: 0.5,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(height: 16),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: colors.shadow.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          _buildFasciaOraria(
+                              Icons.wb_sunny_outlined, 'Mattina', mattina, true),
+                          _buildFasciaOraria(
+                              Icons.wb_twilight_outlined, 'Pomeriggio', pomeriggio, true),
+                          _buildFasciaOraria(
+                              Icons.nightlight_outlined, 'Sera', sera, false),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 30),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                if (_obiettivo.isNotEmpty) ...[
-                  _buildObiettivoStrip(),
-                  const SizedBox(height: 12),
-                ],
-
-                if (_mostraBottoneCheckin) ...[
-                  _buildBannerCheckin(),
-                  const SizedBox(height: 12),
-                ],
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: colors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '\u201C',
-                        style: TextStyle(
-                            fontSize: 36, color: colors.accent, height: 0.8),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        quoteOfDay.text,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: colors.textPrimary,
-                          letterSpacing: 0.5,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.shadow.withValues(alpha: 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _buildFasciaOraria(
-                          Icons.wb_sunny_outlined, 'Mattina', mattina, true),
-                      _buildFasciaOraria(
-                          Icons.wb_twilight_outlined, 'Pomeriggio', pomeriggio, true),
-                      _buildFasciaOraria(
-                          Icons.nightlight_outlined, 'Sera', sera, false),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
-          );
-        },
+              );
+            },
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// ScrollBehavior custom che sostituisce il glow di overscroll (di default blu su Android)
+/// con un bagliore del colore accent dell'app, per uniformare lo scroll al design system.
+class _AccentScrollBehavior extends ScrollBehavior {
+  final Color accentColor;
+
+  const _AccentScrollBehavior(this.accentColor);
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return GlowingOverscrollIndicator(
+      axisDirection: details.direction,
+      color: accentColor,
+      child: child,
     );
   }
 }
