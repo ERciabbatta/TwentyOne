@@ -34,11 +34,11 @@ class NotificationService {
   static const int    _idCheckIn          = 888888;
   static const int    _idStreakReminder   = 777777;
 
-  // Promemoria di scadenza per il check-in serale (entro le 02:00, vedi
+  // Promemoria di scadenza per il check-in serale (entro le 00:00, vedi
   // StreakResetLogic) e notifica di avvenuto azzeramento della streak.
-  static const int    _idStreakDeadline1h   = 666661; // 01:00
-  static const int    _idStreakDeadline30m  = 666662; // 01:30
-  static const int    _idStreakResetAvvenuto = 666663; // 02:00
+  static const int    _idStreakDeadline1h   = 666661; // 23:30
+  static const int    _idStreakDeadline30m  = 666662; // 00:00
+  static const int    _idStreakResetAvvenuto = 666663; // reset dopo 00:00
   // Chiave usata per evitare di rivalutare/azzerare due volte la streak
   // per lo stesso "giorno di riferimento" (guard anti-duplicati).
   static const String _keyUltimoGiornoValutatoReset =
@@ -471,15 +471,15 @@ class NotificationService {
   }
 
   // ---------------------------------------------------------------------
-  // Promemoria di scadenza check-in serale (01:00 / 01:30) + azzeramento
-  // streak e relativa notifica alle 02:00.
+  // Promemoria di scadenza check-in serale (23:30 / 00:00) + azzeramento
+  // streak e relativa notifica dopo la mezzanotte.
   //
-  // Il check-in serale è atteso entro le 22:00. Se non viene completato
-  // entro le 02:00 del giorno successivo, la streak viene azzerata.
+  // Il check-in serale è disponibile dalle 22:00. Se non viene completato
+  // entro le 00:00 del giorno successivo, la streak viene azzerata.
   // ---------------------------------------------------------------------
 
-  /// Programma i due promemoria (01:00 e 01:30) e la valutazione del
-  /// reset alle 02:00. Va richiamato ogni sera dopo le 22:00 (es. quando
+  /// Programma i due promemoria (23:30 e 00:00). Va richiamato ogni sera
+  /// dopo le 22:00 (es. quando
   /// scatta `scheduleCheckIn`) così da coprire sempre la prossima notte.
   Future<void> scheduleStreakDeadline() async {
     final attivo = await getCheckInAttivo();
@@ -504,10 +504,10 @@ class NotificationService {
 
     final now = tz.TZDateTime.now(tz.local);
 
-    // Le notifiche fanno riferimento alla prossima occorrenza delle 01:00
-    // e 01:30: se l'orario è già passato oggi, slittano a domani.
-    var trigger1h  = _prossimoOrarioOggiODomani(now, 1, 0);
-    var trigger30m = _prossimoOrarioOggiODomani(now, 1, 30);
+    // Le notifiche fanno riferimento alla prossima occorrenza delle 23:30
+    // e 00:00: se l'orario è già passato oggi, slittano a domani.
+    var trigger1h  = _prossimoOrarioOggiODomani(now, 23, 30);
+    var trigger30m = _prossimoOrarioOggiODomani(now, 0, 0);
 
     // Se per la prossima scadenza l'utente ha già fatto il check-in,
     // facciamo slittare la notifica al giorno successivo
@@ -530,7 +530,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       id: _idStreakDeadline1h,
       title: '🔥 Streak a rischio',
-      body: 'Manca un\'ora: se non fai il check-in entro le 02:00 la streak si azzera.',
+      body: 'Mancano 30 minuti: se non fai il check-in entro le 00:00 la streak si azzera.',
       scheduledDate: trigger1h,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -549,7 +549,7 @@ class NotificationService {
     await _plugin.zonedSchedule(
       id: _idStreakDeadline30m,
       title: '🔥 Ultima chiamata',
-      body: 'Mancano 30 minuti: se non fai il check-in entro le 02:00 la streak si azzera.',
+      body: 'È mezzanotte: se non hai fatto il check-in, la streak si azzera.',
       scheduledDate: trigger30m,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -591,7 +591,7 @@ class NotificationService {
   /// Valuta se la streak va azzerata per mancato check-in serale e, in tal
   /// caso, azzera la streak su Firestore e invia la notifica di avvenuto
   /// reset. Va chiamato all'avvio dell'app e, idealmente, intorno alle
-  /// 02:00 (es. tramite un richiamo periodico/al risveglio dell'app).
+  /// 00:00 (es. tramite un richiamo periodico/al risveglio dell'app).
   ///
   /// Guard conditions:
   /// - non fa nulla se il check-in del giorno di riferimento è già stato
@@ -606,12 +606,11 @@ class NotificationService {
     if (user == null) return;
 
     final now = tz.TZDateTime.now(tz.local);
-    // Valuta solo dopo le 02:59: fino alle 02:59 siamo ancora nella
-    // finestra della sera precedente (deadline alle 02:00 incluse).
-    if (now.hour < 3) return;
-
-    final giornoRiferimento = StreakResetLogic.giornoDiRiferimento(now);
-    final chiaveGiorno = StreakResetLogic.dateKey(giornoRiferimento);
+    // Chiave del ciclo da valutare: l'ultimo giorno di check-in scaduto
+    // (deadline 00:00 del giorno successivo).
+    final chiaveGiorno = StreakResetLogic.dateKey(
+      DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1)),
+    );
 
     final prefs = await SharedPreferences.getInstance();
     final ultimoGiornoValutato = prefs.getString(_keyUltimoGiornoValutatoReset);
@@ -646,7 +645,7 @@ class NotificationService {
     await _plugin.show(
       id: _idStreakResetAvvenuto,
       title: '💔 Streak azzerata',
-      body: 'Non hai completato il check-in serale entro le 02:00: la tua streak è stata azzerata.',
+      body: 'Non hai completato il check-in serale entro le 00:00: la tua streak è stata azzerata.',
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'streak_deadline_channel',

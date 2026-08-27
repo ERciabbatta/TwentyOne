@@ -210,7 +210,7 @@ class _CheckInState extends State<CheckIn> {
       }
 
       // Check-in completato: cancella i promemoria di scadenza streak
-      // (01:00 / 01:30) ancora in coda — non servono più stanotte.
+      // (23:30 / 00:00) ancora in coda — non servono più stanotte.
       await NotificationService().cancellaStreakDeadline();
     } catch (e) {
       if (mounted) {
